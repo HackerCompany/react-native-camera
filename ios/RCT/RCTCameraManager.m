@@ -480,10 +480,13 @@ RCT_EXPORT_METHOD(setZoom:(CGFloat)zoomFactor) {
       self.presetCamera = AVCaptureDevicePositionBack;
     }
 
-    AVCaptureStillImageOutput *stillImageOutput = [[AVCaptureStillImageOutput alloc] init];
+    AVCapturePhotoOutput *stillImageOutput = [[AVCaptureStillImageOutput alloc] init];
     if ([self.session canAddOutput:stillImageOutput])
     {
       stillImageOutput.outputSettings = @{AVVideoCodecKey : AVVideoCodecJPEG};
+      // TODO: If supported
+      stillImageOutput.depthDataDeliveryEnabled = true;
+        stillImageOutput.enabledSemanticSegmentationMatteTypes = @[AVSemanticSegmentationMatteTypeHair, AVSemanticSegmentationMatteTypeSkin];
       [self.session addOutput:stillImageOutput];
       self.stillImageOutput = stillImageOutput;
     }

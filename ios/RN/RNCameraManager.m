@@ -12,6 +12,9 @@
 @implementation RNCameraManager
 
 RCT_EXPORT_MODULE(RNCameraManager);
+RCT_EXPORT_VIEW_PROPERTY(onPhoto, RCTDirectEventBlock);
+RCT_EXPORT_VIEW_PROPERTY(onMatte, RCTDirectEventBlock);
+RCT_EXPORT_VIEW_PROPERTY(onLandmarks, RCTDirectEventBlock);
 RCT_EXPORT_VIEW_PROPERTY(onCameraReady, RCTDirectEventBlock);
 RCT_EXPORT_VIEW_PROPERTY(onAudioInterrupted, RCTDirectEventBlock);
 RCT_EXPORT_VIEW_PROPERTY(onAudioConnected, RCTDirectEventBlock);
@@ -85,7 +88,7 @@ RCT_EXPORT_VIEW_PROPERTY(videoStabilizationMode, NSInteger);
 
 - (NSArray<NSString *> *)supportedEvents
 {
-    return @[@"onCameraReady", @"onAudioInterrupted", @"onAudioConnected", @"onMountError", @"onBarCodeRead", @"onFacesDetected", @"onPictureTaken", @"onPictureSaved", @"onRecordingStart", @"onRecordingEnd", @"onTextRecognized", @"onGoogleVisionBarcodesDetected", @"onSubjectAreaChanged"];
+    return @[@"onCameraReady", @"onAudioInterrupted", @"onAudioConnected", @"onMountError", @"onBarCodeRead", @"onFacesDetected", @"onPictureTaken", @"onPictureSaved", @"onRecordingStart", @"onRecordingEnd", @"onTextRecognized", @"onGoogleVisionBarcodesDetected", @"onSubjectAreaChanged", @"onPhoto", @"onLandmarks", @"onMatte"];
 }
 
 + (NSDictionary *)validCodecTypes

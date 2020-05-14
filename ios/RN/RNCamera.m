@@ -24,8 +24,6 @@
 
 @property (nonatomic, copy) RCTDirectEventBlock onCameraReady;
 @property (nonatomic, copy) RCTDirectEventBlock onPhoto;
-@property (nonatomic, copy) RCTDirectEventBlock onLandmarks;
-@property (nonatomic, copy) RCTDirectEventBlock onMatte;
 @property (nonatomic, copy) RCTDirectEventBlock onAudioInterrupted;
 @property (nonatomic, copy) RCTDirectEventBlock onAudioConnected;
 @property (nonatomic, copy) RCTDirectEventBlock onMountError;
@@ -147,19 +145,8 @@ BOOL _sessionInterrupted = NO;
     }
 }
 
-- (void)onMatte:(NSDictionary *)event
-{
-    if (_onMatte) {
-        _onMatte(nil);
-    }
-}
 
-- (void)onLandmarks:(NSDictionary *)event
-{
-    if (_onLandmarks) {
-        _onLandmarks(nil);
-    }
-}
+
 
 
 - (void)onMountingError:(NSDictionary *)event
@@ -782,21 +769,19 @@ BOOL _sessionInterrupted = NO;
         return;
     }
 
-    NSInteger orientation = [options[@"orientation"] integerValue];
-
     AVCaptureConnection *connection = [self.stillImageOutput connectionWithMediaType:AVMediaTypeVideo];
-    [connection setVideoOrientation:orientation];
+    [connection setVideoOrientation:AVCaptureVideoOrientationPortrait];
     AVCapturePhotoSettings *settings = [AVCapturePhotoSettings photoSettingsWithFormat:@{AVVideoCodecKey: AVVideoCodecJPEG}];
     [self.stillImageOutput setDepthDataDeliveryEnabled:YES];
     [self.stillImageOutput setEnabledSemanticSegmentationMatteTypes:@[AVSemanticSegmentationMatteTypeSkin, AVSemanticSegmentationMatteTypeHair]];
     [settings setEnabledSemanticSegmentationMatteTypes: @[AVSemanticSegmentationMatteTypeSkin, AVSemanticSegmentationMatteTypeHair]];
     [settings setDepthDataDeliveryEnabled:true];
+    [settings setDepthDataFiltered:true];
     [settings setPhotoQualityPrioritization:AVCapturePhotoQualityPrioritizationBalanced];
     
     [self.stillImageOutput capturePhotoWithSettings:settings delegate:self];
-    if ([options[@"pauseAfterCapture"] boolValue]) {
-        [[self.previewLayer connection] setEnabled:NO];
-    }
+    [[self.previewLayer connection] setEnabled:NO];
+    
 }
 
 - (void)recordWithOrientation:(NSDictionary *)options resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject{
@@ -1103,14 +1088,6 @@ BOOL _sessionInterrupted = NO;
 
         }
         
-
-        // If AVCaptureVideoDataOutput is not required because of Google Vision
-        // (see comment in -record), we go ahead and add the AVCaptureMovieFileOutput
-        // to avoid an exposure rack on some devices that can cause the first few
-        // frames of the recorded output to be underexposed.
-        if (![self.faceDetector isRealDetector] && ![self.textDetector isRealDetector] && ![self.barcodeDetector isRealDetector]) {
-            [self setupMovieFileCapture];
-        }
         [self setupOrDisableBarcodeScanner];
 
         _sessionInterrupted = NO;
@@ -1339,7 +1316,7 @@ BOOL _sessionInterrupted = NO;
                 [self updateZoom];
                 [self updateFocusMode];
                 [self updateFocusDepth];
-                [self updateExposure];
+                //[self updateExposure];
                 [self updateAutoFocusPointOfInterest];
                 [self updateWhiteBalance];
                 [self updateFlashMode];
@@ -2018,12 +1995,7 @@ BOOL _sessionInterrupted = NO;
     }];
 }
 
-- (void)sendLandmarks:(NSString *)str {
-    _onLandmarks(@{@"landmarks": str});
-}
-
 - (void)recognizeFacialLandmarks:(AVCapturePhoto *)photo {
-    RCTDirectEventBlock onLandmarks = _onLandmarks;
     RNCamera *_self = self;
 
         VNDetectFaceLandmarksRequest *request = [[VNDetectFaceLandmarksRequest alloc] initWithCompletionHandler:^(VNRequest * _Nonnull request, NSError * _Nullable error) {
@@ -2032,21 +2004,25 @@ BOOL _sessionInterrupted = NO;
         }
             NSArray<VNFaceObservation *> *results = request.results;
             if ([results count] == 0) {
-                [_self sendLandmarks:@""];
+                NSMutableDictionary *userInfo = [NSMutableDictionary dictionaryWithObject:@"" forKey:@"landmarks"];
+                [[NSNotificationCenter defaultCenter] postNotificationName:@"didReceiveLandmarks" object:nil userInfo:userInfo];
             }
             for (id result in results) {
                 VNFaceLandmarks2D *landmarks = [result landmarks];
                 VNFaceLandmarkRegion2D *faceContour = [landmarks faceContour];
                 const CGPoint *hmm = [faceContour pointsInImageOfSize:CGSizeMake(self.width, self.height)];
                 
-                NSString *points = [NSString stringWithFormat:@"width:%d,height:%d", self.height, self.width];
+                NSString *points = [NSString stringWithFormat:@"width:%d,height:%d|", self.height, self.width];
 
                 
                 for (int i = 0; i < [faceContour pointCount]; i++) {
                     CGPoint point = hmm[i];
                     points = [NSString stringWithFormat:@"%@\n%f,%f", points, point.y, point.x];
                 }
-                [_self sendLandmarks:points];
+                //[_self sendLandmarks:points];
+                // SEND LANDMARKS
+                NSMutableDictionary *userInfo = [NSMutableDictionary dictionaryWithObject:points forKey:@"landmarks"];
+                [[NSNotificationCenter defaultCenter] postNotificationName:@"didReceiveLandmarks" object:nil userInfo:userInfo];
             }
     }];
     NSMutableArray<VNRequest *> *requests = @[request];
@@ -2060,15 +2036,69 @@ BOOL _sessionInterrupted = NO;
     });
 }
 
+- (CGImageRef)rotateImage:(CGImageRef)image {
+    int originalWidth = CGImageGetWidth(image);
+    int originalHeight = CGImageGetHeight(image);
+    int bitsPerComponent = CGImageGetBitsPerComponent(image);
+    int bytesPerRow = CGImageGetBytesPerRow(image);
+    
+    CGColorSpaceRef colorSpace = CGImageGetColorSpace(image);
+    CGBitmapInfo bitmapInfo = CGImageGetBitmapInfo(image);
+    
+    double degreesToRotate = -90.0;
+    double radians = degreesToRotate * M_PI / 180;
+    
+    int width = originalHeight;
+    int height = originalWidth;
+    
+    CGContextRef contextRef = CGBitmapContextCreate(nil, width, height, bitsPerComponent, bytesPerRow, colorSpace, bitmapInfo);
+    
+    CGContextTranslateCTM(contextRef, 0, height / 2);
+    CGContextRotateCTM(contextRef, radians);
+    CGContextScaleCTM(contextRef, 1.0, -1.0);
+    CGContextTranslateCTM(contextRef, -height/2, -width);
+    CGContextDrawImage(contextRef, CGRectMake(0, 0, originalWidth, originalHeight), image);
+    
+    CGImageRef *orientedImage = CGBitmapContextCreateImage(contextRef);
+    
+    return orientedImage;
+}
+
+- (CGImageRef)resizeImage:(CGImageRef)image {
+    int originalWidth = CGImageGetWidth(image);
+    int originalHeight = CGImageGetHeight(image);
+    int bitsPerComponent = CGImageGetBitsPerComponent(image);
+    int bytesPerRow = CGImageGetBytesPerRow(image);
+    
+    CGColorSpaceRef colorSpace = CGImageGetColorSpace(image);
+    CGBitmapInfo bitmapInfo = CGImageGetBitmapInfo(image);
+    
+    double width = 720;
+    double height = 1280;
+    
+    float scaleFactor = width / originalWidth;
+    
+    CGContextRef contextRef = CGBitmapContextCreate(nil, width, height, bitsPerComponent, bytesPerRow, colorSpace, bitmapInfo);
+    
+    // CGContextScaleCTM(contextRef, scaleFactor, scaleFactor);
+    CGContextDrawImage(contextRef, CGRectMake(0, 0, width, height), image);
+    
+    CGImageRef *orientedImage = CGBitmapContextCreateImage(contextRef);
+    
+    return orientedImage;
+}
+
 
 - (void)captureOutput:(AVCapturePhotoOutput *)output didFinishProcessingPhoto:(AVCapturePhoto *)photo error:(NSError *)error {
     [self recognizeFacialLandmarks:photo];
     output.depthDataDeliveryEnabled = true;
     NSMutableArray<NSData *> *semanticSegmentationMatteDataArray = [[NSMutableArray alloc] init];
     NSURL *photoFileName = [[NSURL fileURLWithPath:NSTemporaryDirectory() isDirectory:YES] URLByAppendingPathComponent:@"photo.jpg"];
-    struct CGImage *image = [photo CGImageRepresentation];
+    CGImageRef image = [photo CGImageRepresentation];
+    CGImageRef newImage = [self rotateImage:image];
+
     struct CGImageDestination *destination = CGImageDestinationCreateWithURL(CFBridgingRetain(photoFileName), kUTTypeJPEG, 1, nil);
-    CGImageDestinationAddImage(destination, image, nil);
+    CGImageDestinationAddImage(destination, newImage, nil);
     CGImageDestinationFinalize(destination);
     
     NSString *payload = [NSString stringWithFormat:@"%@,%d,%d", [photoFileName absoluteString], self.width, self.height];
@@ -2080,16 +2110,24 @@ BOOL _sessionInterrupted = NO;
         // TODO: Resize
         CIContext *context = [[CIContext alloc] init];
         
-        struct CGImage *matte = [context createCGImage:img fromRect:[img extent]];
+        CGImageRef matte = [context createCGImage:img fromRect:[img extent]];
+        CGImageRef resizedMatte = [self resizeImage:[self rotateImage:matte]];
         
         NSURL *matteFileName = [[NSURL fileURLWithPath:NSTemporaryDirectory() isDirectory:YES] URLByAppendingPathComponent:[NSString stringWithFormat:@"matte-%@.jpg", matteType]];
         struct CGImageDestination *matteDestination = CGImageDestinationCreateWithURL(CFBridgingRetain(matteFileName), kUTTypeJPEG, 1, nil);
 
-        CGImageDestinationAddImage(matteDestination, matte, nil);
+        CGImageDestinationAddImage(matteDestination, resizedMatte, nil);
         CGImageDestinationFinalize(matteDestination);
         
-        _onMatte(@{@"matte":[matteFileName absoluteString], @"data": matteType});
-    }
+        NSMutableDictionary *userInfo = [NSMutableDictionary dictionaryWithObject:[matteFileName absoluteString] forKey:@"name"];
+        if (matteType == AVSemanticSegmentationMatteTypeHair) {
+            [userInfo setValue:@"AVSemanticSegmentationMatteTypeHair" forKey:@"type"];
+        }
+        if (matteType == AVSemanticSegmentationMatteTypeSkin) {
+            [userInfo setValue:@"AVSemanticSegmentationMatteTypeSkin" forKey:@"type"];
+        }
+        [[NSNotificationCenter defaultCenter] postNotificationName:@"didReceiveMatte" object:nil userInfo:userInfo];
+            }
 }
 
 

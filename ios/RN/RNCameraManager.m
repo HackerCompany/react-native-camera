@@ -8,13 +8,13 @@
 #import <React/RCTLog.h>
 #import <React/RCTUtils.h>
 #import <React/UIView+React.h>
+#import <CoreServices/CoreServices.h>
+
 
 @implementation RNCameraManager
 
 RCT_EXPORT_MODULE(RNCameraManager);
 RCT_EXPORT_VIEW_PROPERTY(onPhoto, RCTDirectEventBlock);
-RCT_EXPORT_VIEW_PROPERTY(onMatte, RCTDirectEventBlock);
-RCT_EXPORT_VIEW_PROPERTY(onLandmarks, RCTDirectEventBlock);
 RCT_EXPORT_VIEW_PROPERTY(onCameraReady, RCTDirectEventBlock);
 RCT_EXPORT_VIEW_PROPERTY(onAudioInterrupted, RCTDirectEventBlock);
 RCT_EXPORT_VIEW_PROPERTY(onAudioConnected, RCTDirectEventBlock);
@@ -39,6 +39,23 @@ RCT_EXPORT_VIEW_PROPERTY(videoStabilizationMode, NSInteger);
 {
     return [[RNCamera alloc] initWithBridge:self.bridge];
 }
+
+- (void)captureOutput:(AVCapturePhotoOutput *)output didFinishRecordingLivePhotoMovieForEventualFileAtURL:(NSURL *)outputFileURL resolvedSettings:(AVCaptureResolvedPhotoSettings *)resolvedSettings  API_AVAILABLE(ios(10.0)){
+    self.width = resolvedSettings.photoDimensions.width;
+    self.height = resolvedSettings.photoDimensions.height;
+}
+
+-(void)captureOutput:(AVCapturePhotoOutput *)output didFinishProcessingPhoto:(AVCapturePhoto *)photo error:(NSError *)error {
+    output.depthDataDeliveryEnabled = true;
+    NSMutableArray<NSData *> *semanticSegmentationMatteDataArray = [NSMutableArray init];
+    int i = 0;
+    NSURL *photoFileName = [[NSURL fileURLWithPath:NSTemporaryDirectory() isDirectory:YES] URLByAppendingPathComponent:@"photo.jpg"];
+    struct CGImage *image = [photo CGImageRepresentation];
+    CGImageDestinationRef *destination = CGImageDestinationCreateWithURL(CFBridgingRetain(photoFileName), kUTTypeJPEG, 1, nil);
+
+    
+}
+
 
 - (NSDictionary *)constantsToExport
 {

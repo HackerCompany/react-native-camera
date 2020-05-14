@@ -483,7 +483,6 @@ RCT_EXPORT_METHOD(setZoom:(CGFloat)zoomFactor) {
     AVCapturePhotoOutput *stillImageOutput = [[AVCaptureStillImageOutput alloc] init];
     if ([self.session canAddOutput:stillImageOutput])
     {
-      stillImageOutput.outputSettings = @{AVVideoCodecKey : AVVideoCodecJPEG};
       // TODO: If supported
       stillImageOutput.depthDataDeliveryEnabled = true;
         stillImageOutput.enabledSemanticSegmentationMatteTypes = @[AVSemanticSegmentationMatteTypeHair, AVSemanticSegmentationMatteTypeSkin];

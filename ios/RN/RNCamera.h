@@ -46,6 +46,8 @@
 @property(nonatomic, assign) BOOL keepAudioSession;
 @property(nonatomic, assign) BOOL useNativeZoom;
 @property(nonatomic, assign) BOOL didCapture;
+@property(nonatomic, assign) BOOL captureWarmup;
+
 
 @property(nonatomic, assign) CGRect rectOfInterest;
 @property(assign, nonatomic) AVVideoCodecType videoCodecType;
@@ -70,8 +72,6 @@
 - (void)updateCaptureAudio;
 
 - (void)updateRectOfInterest;
-// google Barcode props
-- (void)updateGoogleVisionBarcodeType:(id)requestedTypes;
 
 - (void)takePicture:(NSDictionary *)options
             resolve:(RCTPromiseResolveBlock)resolve

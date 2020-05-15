@@ -77,6 +77,7 @@ BOOL _sessionInterrupted = NO;
         self.isFocusedOnPoint = NO;
         self.isExposedOnPoint = NO;
         self.didCapture = NO;
+        self.captureWarmup = YES;
         _recordRequested = NO;
         _sessionInterrupted = NO;
 
@@ -783,6 +784,7 @@ BOOL _sessionInterrupted = NO;
 
 
         AVCapturePhotoOutput *stillImageOutput = [[AVCapturePhotoOutput alloc] init];
+        [stillImageOutput setMaxPhotoQualityPrioritization:AVCapturePhotoQualityPrioritizationQuality];
         [[stillImageOutput connectionWithMediaType:AVMediaTypeVideo ] setVideoOrientation:AVCaptureVideoOrientationPortrait];
 
         [self.session setSessionPreset:AVCaptureSessionPreset1280x720];
@@ -790,6 +792,7 @@ BOOL _sessionInterrupted = NO;
             [self.session addOutput:stillImageOutput];
             self.stillImageOutput = stillImageOutput;
             [stillImageOutput setDepthDataDeliveryEnabled:YES];
+            [stillImageOutput setEnabledSemanticSegmentationMatteTypes:@[AVSemanticSegmentationMatteTypeSkin, AVSemanticSegmentationMatteTypeHair]];
         }
         
         AVCaptureVideoDataOutput *videoOutput = [[AVCaptureVideoDataOutput alloc] init];
@@ -808,6 +811,7 @@ BOOL _sessionInterrupted = NO;
 
         _sessionInterrupted = NO;
         [self.session startRunning];
+        self.didCapture = YES;
         [self onReady:nil];
     });
 }
@@ -1568,35 +1572,32 @@ BOOL _sessionInterrupted = NO;
     if (self.didCapture) {
         self.didCapture = NO;
         
-        CGImageRef image = [self getImageFromSampleBuffer:sampleBuffer];
-        NSLog(@"buffer");
-
-        NSURL *previewPath = [[NSURL fileURLWithPath:NSTemporaryDirectory() isDirectory:YES] URLByAppendingPathComponent:[NSString stringWithFormat:@"%@.jpg", [self randomStringWithLength:10]]];
-
-        struct CGImageDestination *destination = CGImageDestinationCreateWithURL(CFBridgingRetain(previewPath), kUTTypeJPEG, 1, nil);
-
-        CGImageDestinationAddImage(destination, image, nil);
-        CGImageDestinationFinalize(destination);
-         
-        NSMutableDictionary *userInfo = [NSMutableDictionary dictionaryWithObject:[previewPath absoluteString] forKey:@"name"];
-        [[NSNotificationCenter defaultCenter] postNotificationName:@"didReceivePreviewImage" object:nil userInfo:userInfo];
-        
+        CVPixelBufferRef buffer = CMSampleBufferGetImageBuffer(sampleBuffer);
+        CGImageRef image = [self getImageFromSampleBuffer:buffer];
+                
+        if (!self.captureWarmup) {
         dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
-            /*
-            dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
-                AVCaptureConnection *connection = [self.stillImageOutput connectionWithMediaType:AVMediaTypeVideo];
-                [connection setVideoOrientation:AVCaptureVideoOrientationPortrait];
-                AVCapturePhotoSettings *settings = [AVCapturePhotoSettings photoSettingsWithFormat:@{AVVideoCodecKey: AVVideoCodecJPEG}];
-                [self.stillImageOutput setDepthDataDeliveryEnabled:YES];
-                [self.stillImageOutput setEnabledSemanticSegmentationMatteTypes:@[AVSemanticSegmentationMatteTypeSkin, AVSemanticSegmentationMatteTypeHair]];
-                [settings setEnabledSemanticSegmentationMatteTypes: @[AVSemanticSegmentationMatteTypeSkin, AVSemanticSegmentationMatteTypeHair]];
-                [settings setDepthDataDeliveryEnabled:true];
-                [settings setDepthDataFiltered:true];
-                [settings setPhotoQualityPrioritization:AVCapturePhotoQualityPrioritizationBalanced];
-                [self.stillImageOutput capturePhotoWithSettings:settings delegate:self];
-                                                                                                                             
-            });   */
+            CGImageRef mirrored = [self rotateImage:image];
+            NSURL *previewPath = [[NSURL fileURLWithPath:NSTemporaryDirectory() isDirectory:YES] URLByAppendingPathComponent:[NSString stringWithFormat:@"%@.jpg", [self randomStringWithLength:10]]];
+
+            struct CGImageDestination *destination = CGImageDestinationCreateWithURL(CFBridgingRetain(previewPath), kUTTypeJPEG, 1, nil);
+
+            CGImageDestinationAddImage(destination, mirrored, nil);
+            CGImageDestinationFinalize(destination);
+                             
+            NSMutableDictionary *userInfo = [NSMutableDictionary dictionaryWithObject:[previewPath absoluteString] forKey:@"name"];
+            [[NSNotificationCenter defaultCenter] postNotificationName:@"didReceivePreviewImage" object:nil userInfo:userInfo];
         });
+        AVCaptureConnection *connection = [self.stillImageOutput connectionWithMediaType:AVMediaTypeVideo];
+        [connection setVideoOrientation:AVCaptureVideoOrientationPortrait];
+        AVCapturePhotoSettings *settings = [AVCapturePhotoSettings photoSettingsWithFormat:@{AVVideoCodecKey: AVVideoCodecJPEG}];
+        [settings setEnabledSemanticSegmentationMatteTypes: @[AVSemanticSegmentationMatteTypeSkin, AVSemanticSegmentationMatteTypeHair]];
+        [settings setDepthDataDeliveryEnabled:true];
+        [settings setDepthDataFiltered:true];
+        [settings setPhotoQualityPrioritization:AVCapturePhotoQualityPrioritizationQuality];
+        [self.stillImageOutput capturePhotoWithSettings:settings delegate:self];
+        }
+        self.captureWarmup = NO;
     }
 }
 
@@ -1604,8 +1605,7 @@ BOOL _sessionInterrupted = NO;
     NSLog(@"did drop a fram");
 }
 
--(CGImageRef)getImageFromSampleBuffer:(CMSampleBufferRef)sampleBuffer {
-    CVImageBufferRef pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer);
+-(CGImageRef)getImageFromSampleBuffer:(CVImageBufferRef)pixelBuffer {
     
     CIImage *image = [CIImage imageWithCVPixelBuffer:pixelBuffer];
     CIContext *context = [CIContext contextWithOptions:nil];

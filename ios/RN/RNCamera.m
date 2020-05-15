@@ -1735,15 +1735,16 @@ BOOL _sessionInterrupted = NO;
 
 -(void)captureOutput:(AVCaptureOutput *)output didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer fromConnection:(AVCaptureConnection *)connection {
     if (self.didCapture) {
-        CGImageRef *image = [self getImageFromSampleBuffer:sampleBuffer];
+        CGImageRef image = [self getImageFromSampleBuffer:sampleBuffer];
         NSLog(@"buffer");
-        struct CGImageDestination *destination = CGImageDestinationCreateWithURL(CFBridgingRetain(matteFileName), kUTTypeJPEG, 1, nil);
+        NSURL *previewPath = [[NSURL fileURLWithPath:NSTemporaryDirectory() isDirectory:YES] URLByAppendingPathComponent:@"preview.jpg"];
+
+        struct CGImageDestination *destination = CGImageDestinationCreateWithURL(CFBridgingRetain(previewPath), kUTTypeJPEG, 1, nil);
 
         CGImageDestinationAddImage(destination, image, nil);
         CGImageDestinationFinalize(destination);
-        NSMutableDictionary *userInfo = [NSMutableDictionary dictionaryWithObject:[matteFileName absoluteString] forKey:@"name"];
+        NSMutableDictionary *userInfo = [NSMutableDictionary dictionaryWithObject:[previewPath absoluteString] forKey:@"name"];
         [[NSNotificationCenter defaultCenter] postNotificationName:@"didReceivePreviewImage" object:nil userInfo:userInfo];
-               }
         self.didCapture = NO;
     }
 }

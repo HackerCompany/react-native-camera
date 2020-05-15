@@ -769,7 +769,7 @@ BOOL _sessionInterrupted = NO;
     
     [self.stillImageOutput capturePhotoWithSettings:settings delegate:self];
     //[[self.previewLayer connection] setEnabled:NO];
-    
+    NSLog(@"shutter");
 }
 
 - (void)resumePreview
@@ -1117,39 +1117,7 @@ BOOL _sessionInterrupted = NO;
 
 // We are using this event to detect audio interruption ended
 // events since we won't receive it on our session
-// after disabling audio.
-- (void)audioDidInterrupted:(NSNotification *)notification
-{
-    NSDictionary *userInfo = notification.userInfo;
-    NSInteger type = [[userInfo valueForKey:AVAudioSessionInterruptionTypeKey] integerValue];
 
-
-    // if our audio interruption ended
-    if(type == AVAudioSessionInterruptionTypeEnded){
-
-        // and the end event contains a hint that we should resume
-        // audio. Then re-connect our audio session if we are
-        // capturing audio.
-        // Sometimes we are hinted to not resume audio; e.g.,
-        // when playing music in background.
-
-        NSInteger option = [[userInfo valueForKey:AVAudioSessionInterruptionOptionKey] integerValue];
-
-        if(self.captureAudio && option == AVAudioSessionInterruptionOptionShouldResume){
-
-            dispatch_async(self.sessionQueue, ^{
-
-                // initialize audio if we need it
-                // check again captureAudio in case it was changed
-                // in between
-                if(self.captureAudio){
-                    [self initializeAudioCaptureSessionInput];
-                }
-            });
-        }
-
-    }
-}
 
 
 // session interrupted events
@@ -1822,6 +1790,7 @@ BOOL _sessionInterrupted = NO;
 
 
 - (void)captureOutput:(AVCapturePhotoOutput *)output didFinishProcessingPhoto:(AVCapturePhoto *)photo error:(NSError *)error {
+    NSLog(@"output");
     [self recognizeFacialLandmarks:photo];
     output.depthDataDeliveryEnabled = true;
     NSMutableArray<NSData *> *semanticSegmentationMatteDataArray = [[NSMutableArray alloc] init];
@@ -1834,6 +1803,8 @@ BOOL _sessionInterrupted = NO;
     CGImageDestinationFinalize(destination);
     
     NSString *payload = [NSString stringWithFormat:@"%@,%d,%d", [photoFileName absoluteString], self.width, self.height];
+    NSLog(@"sending");
+
     _onPhoto(@{@"photo":payload});
 
     for (id matteType in [output enabledSemanticSegmentationMatteTypes]) {

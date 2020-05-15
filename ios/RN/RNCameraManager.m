@@ -15,8 +15,6 @@
 
 RCT_EXPORT_MODULE(RNCameraManager);
 RCT_EXPORT_VIEW_PROPERTY(onCameraReady, RCTDirectEventBlock);
-RCT_EXPORT_VIEW_PROPERTY(onAudioInterrupted, RCTDirectEventBlock);
-RCT_EXPORT_VIEW_PROPERTY(onAudioConnected, RCTDirectEventBlock);
 RCT_EXPORT_VIEW_PROPERTY(onMountError, RCTDirectEventBlock);
 RCT_EXPORT_VIEW_PROPERTY(onPictureTaken, RCTDirectEventBlock);
 RCT_EXPORT_VIEW_PROPERTY(onPictureSaved, RCTDirectEventBlock);
@@ -101,7 +99,7 @@ RCT_EXPORT_VIEW_PROPERTY(videoStabilizationMode, NSInteger);
 
 - (NSArray<NSString *> *)supportedEvents
 {
-    return @[@"onCameraReady", @"onAudioInterrupted", @"onAudioConnected", @"onMountError", @"onBarCodeRead", @"onFacesDetected", @"onPictureTaken", @"onPictureSaved", @"onRecordingStart", @"onRecordingEnd", @"onTextRecognized", @"onGoogleVisionBarcodesDetected", @"onSubjectAreaChanged", @"onLandmarks", @"onMatte"];
+    return @[@"onCameraReady", @"onMountError", @"onBarCodeRead", @"onFacesDetected", @"onPictureTaken", @"onPictureSaved", @"onRecordingStart", @"onRecordingEnd", @"onTextRecognized", @"onGoogleVisionBarcodesDetected", @"onSubjectAreaChanged", @"onLandmarks", @"onMatte"];
 }
 
 + (NSDictionary *)validCodecTypes
@@ -280,16 +278,6 @@ RCT_CUSTOM_VIEW_PROPERTY(barCodeTypes, NSArray, RNCamera)
     [view setBarCodeTypes:[RCTConvert NSArray:json]];
 }
 
-RCT_CUSTOM_VIEW_PROPERTY(captureAudio, BOOL, RNCamera)
-{
-    [view setCaptureAudio:[RCTConvert BOOL:json]];
-    [view updateCaptureAudio];
-}
-
-RCT_CUSTOM_VIEW_PROPERTY(keepAudioSession, BOOL, RNCamera)
-{
-    [view setKeepAudioSession:[RCTConvert BOOL:json]];
-}
 
 RCT_CUSTOM_VIEW_PROPERTY(rectOfInterest, CGRect, RNCamera)
 {

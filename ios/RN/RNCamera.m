@@ -20,8 +20,6 @@
 @property (nonatomic, strong) RCTPromiseRejectBlock videoRecordedReject;
 
 @property (nonatomic, copy) RCTDirectEventBlock onCameraReady;
-@property (nonatomic, copy) RCTDirectEventBlock onAudioInterrupted;
-@property (nonatomic, copy) RCTDirectEventBlock onAudioConnected;
 @property (nonatomic, copy) RCTDirectEventBlock onMountError;
 @property (nonatomic, copy) RCTDirectEventBlock onBarCodeRead;
 @property (nonatomic, copy) RCTDirectEventBlock onTextRecognized;
@@ -238,7 +236,6 @@ BOOL _sessionInterrupted = NO;
 
         [[NSNotificationCenter defaultCenter] removeObserver:self name:AVCaptureSessionRuntimeErrorNotification object:self.session];
 
-        [[NSNotificationCenter defaultCenter] removeObserver:self name:AVAudioSessionInterruptionNotification object:[AVAudioSession sharedInstance]];
 
         [self stopSession];
     }
@@ -706,18 +703,6 @@ BOOL _sessionInterrupted = NO;
 }
 
 
-- (void)updateCaptureAudio
-{
-    dispatch_async(self.sessionQueue, ^{
-        if(self.captureAudio){
-            [self initializeAudioCaptureSessionInput];
-        }
-        else{
-            [self removeAudioCaptureSessionInput];
-        }
-    });
-}
-
 - (void)takePictureWithOrientation:(NSDictionary *)options resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject{
     [self takePicture:nil resolve:resolve reject:reject];
 }
@@ -820,115 +805,13 @@ BOOL _sessionInterrupted = NO;
             [self.session removeOutput:output];
         }
 
-        // cleanup audio input if any, and release
-        // audio session so other apps can continue playback.
-        [self removeAudioCaptureSessionInput];
 
         // clean these up as well since we've removed
         // all inputs and outputs from session
         self.videoCaptureDeviceInput = nil;
-        self.audioCaptureDeviceInput = nil;
         self.movieFileOutput = nil;
     });
 }
-
-// Initializes audio capture device
-// Note: Ensure this is called within a a session configuration block
-- (void)initializeAudioCaptureSessionInput
-{
-    // only initialize if not initialized already
-    if(self.audioCaptureDeviceInput == nil){
-        NSError *error = nil;
-
-        AVCaptureDevice *audioCaptureDevice = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeAudio];
-        AVCaptureDeviceInput *audioDeviceInput = [AVCaptureDeviceInput deviceInputWithDevice:audioCaptureDevice error:&error];
-
-        if (error || audioDeviceInput == nil) {
-            RCTLogWarn(@"%s: %@", __func__, error);
-        }
-
-        else{
-
-            // test if we can activate the device input.
-            // If we fail, means it is already being used
-            BOOL setActive = [[AVAudioSession sharedInstance] setActive:YES error:&error];
-
-            if (!setActive) {
-                RCTLogWarn(@"Audio device could not set active: %s: %@", __func__, error);
-            }
-
-            else if ([self.session canAddInput:audioDeviceInput]) {
-                [self.session addInput:audioDeviceInput];
-                self.audioCaptureDeviceInput = audioDeviceInput;
-
-                // inform that audio has been resumed
-                if(self.onAudioConnected){
-                    self.onAudioConnected(nil);
-                }
-            }
-            else{
-                RCTLog(@"Cannot add audio input");
-            }
-        }
-
-        // if we failed to get the audio device, fire our interrupted event
-        if(self.audioCaptureDeviceInput == nil && self.onAudioInterrupted){
-            self.onAudioInterrupted(nil);
-        }
-    }
-}
-
-
-// Removes audio capture from the session, allowing the session
-// to resume if it was interrupted, and stopping any
-// recording in progress with the appropriate flags.
-- (void)removeAudioCaptureSessionInput
-{
-    if(self.audioCaptureDeviceInput != nil){
-
-        BOOL audioRemoved = NO;
-
-        if ([self.session.inputs containsObject:self.audioCaptureDeviceInput]) {
-
-            if ([self isRecording]) {
-                self.isRecordingInterrupted = YES;
-            }
-
-            [self.session removeInput:self.audioCaptureDeviceInput];
-
-            self.audioCaptureDeviceInput = nil;
-
-            // update flash since it gets reset when
-            // we change the session inputs
-            dispatch_async(self.sessionQueue, ^{
-                [self updateFlashMode];
-            });
-
-            audioRemoved = YES;
-        }
-
-        // Deactivate our audio session so other audio can resume
-        // playing, if any. E.g., background music.
-        // unless told not to
-        if(!self.keepAudioSession){
-            NSError *error = nil;
-
-            BOOL setInactive = [[AVAudioSession sharedInstance] setActive:NO withOptions:AVAudioSessionSetActiveOptionNotifyOthersOnDeactivation error:&error];
-
-            if (!setInactive) {
-                RCTLogWarn(@"Audio device could not set inactive: %s: %@", __func__, error);
-            }
-        }
-
-        self.audioCaptureDeviceInput = nil;
-
-        // inform that audio was interrupted
-        if(audioRemoved && self.onAudioInterrupted){
-            self.onAudioInterrupted(nil);
-        }
-    }
-}
-
 
 - (void)initializeCaptureSessionInput
 {
@@ -1029,21 +912,6 @@ BOOL _sessionInterrupted = NO;
         }
         [self.stillImageOutput setDepthDataDeliveryEnabled:YES];
 
-
-        // if we have not yet set our audio capture device,
-        // set it. Setting it early will prevent flickering when
-        // recording a video
-        // Only set it if captureAudio is true so we don't prompt
-        // for permission if audio is not needed.
-        // TODO: If we can update checkRecordAudioAuthorizationStatus
-        // to actually do something in production, we can replace
-        // the captureAudio prop by a simple permission check;
-        // for example, checking
-        // [[AVAudioSession sharedInstance] recordPermission] == AVAudioSessionRecordPermissionGranted
-        if(self.captureAudio){
-            [self initializeAudioCaptureSessionInput];
-        }
-
         [self.session commitConfiguration];
     });
 }
@@ -1101,15 +969,6 @@ BOOL _sessionInterrupted = NO;
     NSDictionary *userInfo = notification.userInfo;
     NSInteger type = [[userInfo valueForKey:AVCaptureSessionInterruptionReasonKey] integerValue];
 
-    if(type == AVCaptureSessionInterruptionReasonAudioDeviceInUseByAnotherClient){
-        // if we have audio, stop it so preview resumes
-        // it will eventually be re-loaded the next time recording
-        // is requested, although it will flicker.
-        dispatch_async(self.sessionQueue, ^{
-            [self removeAudioCaptureSessionInput];
-        });
-
-    }
 
 }
 

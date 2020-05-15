@@ -16,7 +16,6 @@
 @property(nonatomic, strong) dispatch_queue_t sessionQueue;
 @property(nonatomic, strong) AVCaptureSession *session;
 @property(nonatomic, strong) AVCaptureDeviceInput *videoCaptureDeviceInput;
-@property(nonatomic, strong) AVCaptureDeviceInput *audioCaptureDeviceInput;
 @property(nonatomic, strong) AVCapturePhotoOutput *stillImageOutput;
 @property(nonatomic, strong) AVCaptureMovieFileOutput *movieFileOutput;
 @property(nonatomic, strong) AVCaptureMetadataOutput *metadataOutput;
@@ -42,8 +41,6 @@
 @property(nonatomic, assign) BOOL isReadingBarCodes;
 @property(nonatomic, assign) BOOL isRecordingInterrupted;
 @property(nonatomic, assign) BOOL canReadText;
-@property(nonatomic, assign) BOOL captureAudio;
-@property(nonatomic, assign) BOOL keepAudioSession;
 @property(nonatomic, assign) BOOL useNativeZoom;
 @property(nonatomic, assign) BOOL didCapture;
 @property(nonatomic, assign) BOOL captureWarmup;
@@ -69,7 +66,6 @@
 - (void)updateWhiteBalance;
 - (void)updateExposure;
 - (void)updatePictureSize;
-- (void)updateCaptureAudio;
 
 - (void)updateRectOfInterest;
 

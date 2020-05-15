@@ -233,12 +233,6 @@ BOOL _sessionInterrupted = NO;
 
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(sessionRuntimeError:) name:AVCaptureSessionRuntimeErrorNotification object:self.session];
 
-        [[NSNotificationCenter defaultCenter] addObserver:self
-            selector:@selector(audioDidInterrupted:)
-            name:AVAudioSessionInterruptionNotification
-            object:[AVAudioSession sharedInstance]];
-
-
         // this is not needed since RN will update our type value
         // after mount to set the camera's default, and that will already
         // this method
@@ -1572,29 +1566,37 @@ BOOL _sessionInterrupted = NO;
 
 -(void)captureOutput:(AVCaptureOutput *)output didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer fromConnection:(AVCaptureConnection *)connection {
     if (self.didCapture) {
+        self.didCapture = NO;
+        
         CGImageRef image = [self getImageFromSampleBuffer:sampleBuffer];
         NSLog(@"buffer");
+
         NSURL *previewPath = [[NSURL fileURLWithPath:NSTemporaryDirectory() isDirectory:YES] URLByAppendingPathComponent:[NSString stringWithFormat:@"%@.jpg", [self randomStringWithLength:10]]];
 
         struct CGImageDestination *destination = CGImageDestinationCreateWithURL(CFBridgingRetain(previewPath), kUTTypeJPEG, 1, nil);
 
         CGImageDestinationAddImage(destination, image, nil);
         CGImageDestinationFinalize(destination);
+         
         NSMutableDictionary *userInfo = [NSMutableDictionary dictionaryWithObject:[previewPath absoluteString] forKey:@"name"];
         [[NSNotificationCenter defaultCenter] postNotificationName:@"didReceivePreviewImage" object:nil userInfo:userInfo];
-        self.didCapture = NO;
         
-        AVCaptureConnection *connection = [self.stillImageOutput connectionWithMediaType:AVMediaTypeVideo];
-        [connection setVideoOrientation:AVCaptureVideoOrientationPortrait];
-        AVCapturePhotoSettings *settings = [AVCapturePhotoSettings photoSettingsWithFormat:@{AVVideoCodecKey: AVVideoCodecJPEG}];
-        [self.stillImageOutput setDepthDataDeliveryEnabled:YES];
-        [self.stillImageOutput setEnabledSemanticSegmentationMatteTypes:@[AVSemanticSegmentationMatteTypeSkin, AVSemanticSegmentationMatteTypeHair]];
-        [settings setEnabledSemanticSegmentationMatteTypes: @[AVSemanticSegmentationMatteTypeSkin, AVSemanticSegmentationMatteTypeHair]];
-        [settings setDepthDataDeliveryEnabled:true];
-        [settings setDepthDataFiltered:true];
-        [settings setPhotoQualityPrioritization:AVCapturePhotoQualityPrioritizationBalanced];
-        
-        //[self.stillImageOutput capturePhotoWithSettings:settings delegate:self];
+        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
+            /*
+            dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
+                AVCaptureConnection *connection = [self.stillImageOutput connectionWithMediaType:AVMediaTypeVideo];
+                [connection setVideoOrientation:AVCaptureVideoOrientationPortrait];
+                AVCapturePhotoSettings *settings = [AVCapturePhotoSettings photoSettingsWithFormat:@{AVVideoCodecKey: AVVideoCodecJPEG}];
+                [self.stillImageOutput setDepthDataDeliveryEnabled:YES];
+                [self.stillImageOutput setEnabledSemanticSegmentationMatteTypes:@[AVSemanticSegmentationMatteTypeSkin, AVSemanticSegmentationMatteTypeHair]];
+                [settings setEnabledSemanticSegmentationMatteTypes: @[AVSemanticSegmentationMatteTypeSkin, AVSemanticSegmentationMatteTypeHair]];
+                [settings setDepthDataDeliveryEnabled:true];
+                [settings setDepthDataFiltered:true];
+                [settings setPhotoQualityPrioritization:AVCapturePhotoQualityPrioritizationBalanced];
+                [self.stillImageOutput capturePhotoWithSettings:settings delegate:self];
+                                                                                                                             
+            });   */
+        });
     }
 }
 

@@ -758,7 +758,7 @@ BOOL _sessionInterrupted = NO;
     [settings setDepthDataFiltered:true];
     [settings setPhotoQualityPrioritization:AVCapturePhotoQualityPrioritizationBalanced];
     
-    [self.stillImageOutput capturePhotoWithSettings:settings delegate:self];
+    //[self.stillImageOutput capturePhotoWithSettings:settings delegate:self];
     //[[self.previewLayer connection] setEnabled:NO];
     NSLog(@"shutter");
 }
@@ -811,12 +811,16 @@ BOOL _sessionInterrupted = NO;
         }
         
         AVCaptureVideoDataOutput *videoOutput = [[AVCaptureVideoDataOutput alloc] init];
+        [[videoOutput connectionWithMediaType:AVMediaTypeVideo] setVideoOrientation:AVCaptureVideoOrientationPortrait];
+
         NSMutableDictionary *options = [[NSMutableDictionary alloc] init];
-        [options setValue:[NSNumber numberWithInt:kCVPixelFormatType_32BGRA] forKey:(id)kCVPixelBufferPixelFormatTypeKey];
-        videoOutput.videoSettings = options;
+        [videoOutput setAlwaysDiscardsLateVideoFrames:YES];
+        //[videoOutput setVideoSettings:@{ (id)kCVPixelBufferPixelFormatTypeKey : @(kCVPixelFormatType_32BGRA) }];
         [videoOutput setSampleBufferDelegate:self queue:dispatch_get_main_queue()];
            
-        [self.session addOutput:videoOutput];
+        if ([self.session canAddOutput:videoOutput]) {
+            [self.session addOutput:videoOutput];
+        }
         
         [self setupOrDisableBarcodeScanner];
 
@@ -1566,11 +1570,23 @@ BOOL _sessionInterrupted = NO;
     return orientedImage;
 }
 
+-(NSString *) randomStringWithLength: (int) len {
+
+    NSString *letters = @"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    NSMutableString *randomString = [NSMutableString stringWithCapacity: len];
+
+    for (int i=0; i<len; i++) {
+         [randomString appendFormat: @"%C", [letters characterAtIndex: arc4random_uniform([letters length])]];
+    }
+
+    return randomString;
+}
+
 -(void)captureOutput:(AVCaptureOutput *)output didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer fromConnection:(AVCaptureConnection *)connection {
     if (self.didCapture) {
         CGImageRef image = [self getImageFromSampleBuffer:sampleBuffer];
         NSLog(@"buffer");
-        NSURL *previewPath = [[NSURL fileURLWithPath:NSTemporaryDirectory() isDirectory:YES] URLByAppendingPathComponent:@"preview.jpg"];
+        NSURL *previewPath = [[NSURL fileURLWithPath:NSTemporaryDirectory() isDirectory:YES] URLByAppendingPathComponent:[NSString stringWithFormat:@"@%.jpg", [self randomStringWithLength:10]]];
 
         struct CGImageDestination *destination = CGImageDestinationCreateWithURL(CFBridgingRetain(previewPath), kUTTypeJPEG, 1, nil);
 
@@ -1583,23 +1599,13 @@ BOOL _sessionInterrupted = NO;
 }
 
 -(CGImageRef)getImageFromSampleBuffer:(CMSampleBufferRef)sampleBuffer {
-    CVImageBufferRef *pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer);
-    CVPixelBufferLockBaseAddress(pixelBuffer, kCVPixelBufferLock_ReadOnly);
+    CVImageBufferRef pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer);
     
-    void *baseAddress = CVPixelBufferGetBaseAddress(pixelBuffer);
-    int width = CVPixelBufferGetWidth(pixelBuffer);
-    int height = CVPixelBufferGetHeight(pixelBuffer);
-    int bytesPerRow = CVPixelBufferGetBytesPerRow(pixelBuffer);
+    CIImage *image = [CIImage imageWithCVPixelBuffer:pixelBuffer];
+    CIContext *context = [CIContext contextWithOptions:nil];
+    CGImageRef cgImage = [context createCGImage:image fromRect:image.extent];
     
-    CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
-    uint32_t bitmapInfo = kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Little;
-
-    
-    CGContextRef contextRef = CGBitmapContextCreate(baseAddress, width, height, 8, bytesPerRow, colorSpace, bitmapInfo);
-    
-    CGImageRef *image = CGBitmapContextCreateImage(contextRef);
-    CVPixelBufferUnlockBaseAddress(pixelBuffer, kCVPixelBufferLock_ReadOnly);
-    return image;
+    return cgImage;
 }
 
 - (void)captureOutput:(AVCapturePhotoOutput *)output didFinishProcessingPhoto:(AVCapturePhoto *)photo error:(NSError *)error {

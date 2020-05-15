@@ -20,7 +20,6 @@
 @property (nonatomic, strong) RCTPromiseRejectBlock videoRecordedReject;
 
 @property (nonatomic, copy) RCTDirectEventBlock onCameraReady;
-@property (nonatomic, copy) RCTDirectEventBlock onPhoto;
 @property (nonatomic, copy) RCTDirectEventBlock onAudioInterrupted;
 @property (nonatomic, copy) RCTDirectEventBlock onAudioConnected;
 @property (nonatomic, copy) RCTDirectEventBlock onMountError;
@@ -128,16 +127,6 @@ BOOL _sessionInterrupted = NO;
         _onCameraReady(nil);
     }
 }
-
-- (void)onPhoto:(NSDictionary *)event
-{
-    if (_onPhoto) {
-        _onPhoto(nil);
-    }
-}
-
-
-
 
 
 - (void)onMountingError:(NSDictionary *)event
@@ -741,9 +730,6 @@ BOOL _sessionInterrupted = NO;
         return;
     }
     self.didCapture = YES;
-
-    //[[self.previewLayer connection] setEnabled:NO];
-    NSLog(@"shutter");
 }
 
 - (void)resumePreview
@@ -1456,11 +1442,7 @@ BOOL _sessionInterrupted = NO;
             [options setValue:[NSNumber numberWithBool:YES] forKey:kCIImageAuxiliarySemanticSegmentationSkinMatte];
         }
     }
-    return [[CIImage alloc] initWithCVImageBuffer:[matte mattingImage] options:@{
-        /*kCIImageAuxiliarySemanticSegmentationSkinMatte: [NSNumber numberWithBool: ssmType == AVSemanticSegmentationMatteTypeSkin ],
-        kCIImageAuxiliarySemanticSegmentationHairMatte: [NSNumber numberWithBool: ssmType == AVSemanticSegmentationMatteTypeHair ],
-        kCIImageColorSpace: [NSNumber numberWithInt:CGColorSpaceCreateWithName(kCGColorSpaceSRGB)]*/
-    }];
+    return [[CIImage alloc] initWithCVImageBuffer:[matte mattingImage] options:@{}];
 }
 
 - (void)recognizeFacialLandmarks:(AVCapturePhoto *)photo {
@@ -1526,9 +1508,12 @@ BOOL _sessionInterrupted = NO;
     CGContextScaleCTM(contextRef, 1.0, -1.0);
     CGContextTranslateCTM(contextRef, -height/2, -width);
     CGContextDrawImage(contextRef, CGRectMake(0, 0, originalWidth, originalHeight), image);
+        
+    CGImageRef orientedImage = CGBitmapContextCreateImage(contextRef);
     
-    CGImageRef *orientedImage = CGBitmapContextCreateImage(contextRef);
-    
+    CGContextRelease(contextRef);
+
+        
     return orientedImage;
 }
 
@@ -1551,7 +1536,9 @@ BOOL _sessionInterrupted = NO;
     // CGContextScaleCTM(contextRef, scaleFactor, scaleFactor);
     CGContextDrawImage(contextRef, CGRectMake(0, 0, width, height), image);
     
-    CGImageRef *orientedImage = CGBitmapContextCreateImage(contextRef);
+    CGImageRef orientedImage = CGBitmapContextCreateImage(contextRef);
+    
+    CGContextRelease(contextRef);
     
     return orientedImage;
 }
@@ -1572,30 +1559,37 @@ BOOL _sessionInterrupted = NO;
     if (self.didCapture) {
         self.didCapture = NO;
         
-        CVPixelBufferRef buffer = CMSampleBufferGetImageBuffer(sampleBuffer);
-        CGImageRef image = [self getImageFromSampleBuffer:buffer];
-                
         if (!self.captureWarmup) {
-        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
-            CGImageRef mirrored = [self rotateImage:image];
-            NSURL *previewPath = [[NSURL fileURLWithPath:NSTemporaryDirectory() isDirectory:YES] URLByAppendingPathComponent:[NSString stringWithFormat:@"%@.jpg", [self randomStringWithLength:10]]];
+            @autoreleasepool {
+                CVPixelBufferRef buffer = CMSampleBufferGetImageBuffer(sampleBuffer);
+                CIImage *ciimage = [CIImage imageWithCVPixelBuffer:buffer];
+                int width = ciimage.extent.size.width;
+                int height = ciimage.extent.size.height;
+                CIContext *context = [CIContext contextWithOptions:nil];
+                CGImageRef image = [context createCGImage:ciimage fromRect:ciimage.extent];
+                context = nil;
+                CGImageRef mirrored = [self rotateImage:image];
+                  NSURL *previewPath = [[NSURL fileURLWithPath:NSTemporaryDirectory() isDirectory:YES] URLByAppendingPathComponent:[NSString stringWithFormat:@"%@.jpg", [self randomStringWithLength:10]]];
 
-            struct CGImageDestination *destination = CGImageDestinationCreateWithURL(CFBridgingRetain(previewPath), kUTTypeJPEG, 1, nil);
+                  struct CGImageDestination *destination = CGImageDestinationCreateWithURL(CFBridgingRetain(previewPath), kUTTypeJPEG, 1, nil);
 
-            CGImageDestinationAddImage(destination, mirrored, nil);
-            CGImageDestinationFinalize(destination);
-                             
-            NSMutableDictionary *userInfo = [NSMutableDictionary dictionaryWithObject:[previewPath absoluteString] forKey:@"name"];
-            [[NSNotificationCenter defaultCenter] postNotificationName:@"didReceivePreviewImage" object:nil userInfo:userInfo];
-        });
-        AVCaptureConnection *connection = [self.stillImageOutput connectionWithMediaType:AVMediaTypeVideo];
-        [connection setVideoOrientation:AVCaptureVideoOrientationPortrait];
-        AVCapturePhotoSettings *settings = [AVCapturePhotoSettings photoSettingsWithFormat:@{AVVideoCodecKey: AVVideoCodecJPEG}];
-        [settings setEnabledSemanticSegmentationMatteTypes: @[AVSemanticSegmentationMatteTypeSkin, AVSemanticSegmentationMatteTypeHair]];
-        [settings setDepthDataDeliveryEnabled:true];
-        [settings setDepthDataFiltered:true];
-        [settings setPhotoQualityPrioritization:AVCapturePhotoQualityPrioritizationQuality];
-        [self.stillImageOutput capturePhotoWithSettings:settings delegate:self];
+                  CGImageDestinationAddImage(destination, mirrored, nil);
+                  CGImageDestinationFinalize(destination);
+                  CGImageRelease(image);
+                  CGImageRelease(mirrored);
+                  NSMutableDictionary *userInfo = [NSMutableDictionary dictionaryWithObject:[previewPath absoluteString] forKey:@"name"];
+                  [userInfo setValue:[NSString stringWithFormat:@"%d", width] forKey:@"width"];
+                  [userInfo setValue:[NSString stringWithFormat:@"%d", height] forKey:@"height"];
+                  [[NSNotificationCenter defaultCenter] postNotificationName:@"didReceivePreviewImage" object:nil userInfo:userInfo];
+            }
+            
+            AVCaptureConnection *connection = [self.stillImageOutput connectionWithMediaType:AVMediaTypeVideo];
+            [connection setVideoOrientation:AVCaptureVideoOrientationPortrait];
+            AVCapturePhotoSettings *settings = [AVCapturePhotoSettings photoSettingsWithFormat:@{AVVideoCodecKey: AVVideoCodecJPEG}];
+            [settings setEnabledSemanticSegmentationMatteTypes: @[AVSemanticSegmentationMatteTypeSkin, AVSemanticSegmentationMatteTypeHair]];
+            [settings setDepthDataDeliveryEnabled:true];
+            [settings setPhotoQualityPrioritization:AVCapturePhotoQualityPrioritizationQuality];
+            [self.stillImageOutput capturePhotoWithSettings:settings delegate:self];
         }
         self.captureWarmup = NO;
     }
@@ -1605,47 +1599,50 @@ BOOL _sessionInterrupted = NO;
     NSLog(@"did drop a fram");
 }
 
--(CGImageRef)getImageFromSampleBuffer:(CVImageBufferRef)pixelBuffer {
-    
-    CIImage *image = [CIImage imageWithCVPixelBuffer:pixelBuffer];
-    CIContext *context = [CIContext contextWithOptions:nil];
-    CGImageRef cgImage = [context createCGImage:image fromRect:image.extent];
-    
-    return cgImage;
-}
 
 - (void)captureOutput:(AVCapturePhotoOutput *)output didFinishProcessingPhoto:(AVCapturePhoto *)photo error:(NSError *)error {
-    NSLog(@"output");
     [self recognizeFacialLandmarks:photo];
     output.depthDataDeliveryEnabled = true;
-    NSMutableArray<NSData *> *semanticSegmentationMatteDataArray = [[NSMutableArray alloc] init];
     NSURL *photoFileName = [[NSURL fileURLWithPath:NSTemporaryDirectory() isDirectory:YES] URLByAppendingPathComponent:@"photo.jpg"];
-    CGImageRef image = [photo CGImageRepresentation];
-    CGImageRef newImage = [self rotateImage:image];
-
     struct CGImageDestination *destination = CGImageDestinationCreateWithURL(CFBridgingRetain(photoFileName), kUTTypeJPEG, 1, nil);
-    CGImageDestinationAddImage(destination, newImage, nil);
-    CGImageDestinationFinalize(destination);
+    @autoreleasepool {
+        // No need to release because obtained by CGImageRepresentation
+        CGImageRef image = [photo CGImageRepresentation];
+
+        CGImageRef newImage = [self rotateImage:image];
+
+        CGImageDestinationAddImage(destination, newImage, nil);
+        CGImageDestinationFinalize(destination);
+        
+        CGImageRelease(newImage);
+    }
+
     
     NSString *payload = [NSString stringWithFormat:@"%@,%d,%d", [photoFileName absoluteString], self.width, self.height];
-    NSLog(@"sending");
-
-    _onPhoto(@{@"photo":payload});
+    
+    NSMutableDictionary *photoDictionary = [NSMutableDictionary dictionaryWithObject:payload forKey:@"filename"];
+    [[NSNotificationCenter defaultCenter] postNotificationName:@"didReceivePhoto" object:nil userInfo:photoDictionary];
 
     for (id matteType in [output enabledSemanticSegmentationMatteTypes]) {
         CIImage *img = [self handleMatteData:photo matteType:matteType];
-        CGSize dim = CGSizeMake(720, 1080);
         // TODO: Resize
-        CIContext *context = [[CIContext alloc] init];
-        
-        CGImageRef matte = [context createCGImage:img fromRect:[img extent]];
-        CGImageRef resizedMatte = [self resizeImage:[self rotateImage:matte]];
-        
         NSURL *matteFileName = [[NSURL fileURLWithPath:NSTemporaryDirectory() isDirectory:YES] URLByAppendingPathComponent:[NSString stringWithFormat:@"matte-%@.jpg", matteType]];
-        struct CGImageDestination *matteDestination = CGImageDestinationCreateWithURL(CFBridgingRetain(matteFileName), kUTTypeJPEG, 1, nil);
+        @autoreleasepool {
+            CIContext *context = [[CIContext alloc] init];
+            CGImageRef matte = [context createCGImage:img fromRect:[img extent]];
+            context = nil;
+            CGImageRef rotatedMatte = [self rotateImage:matte];
+            CGImageRef resizedMatte = [self resizeImage:rotatedMatte];
+            
+            struct CGImageDestination *matteDestination = CGImageDestinationCreateWithURL(CFBridgingRetain(matteFileName), kUTTypeJPEG, 1, nil);
 
-        CGImageDestinationAddImage(matteDestination, resizedMatte, nil);
-        CGImageDestinationFinalize(matteDestination);
+            CGImageDestinationAddImage(matteDestination, resizedMatte, nil);
+            CGImageDestinationFinalize(matteDestination);
+            
+            CGImageRelease(matte);
+            CGImageRelease(resizedMatte);
+            CGImageRelease(rotatedMatte);
+        }
         
         NSMutableDictionary *userInfo = [NSMutableDictionary dictionaryWithObject:[matteFileName absoluteString] forKey:@"name"];
         if (matteType == AVSemanticSegmentationMatteTypeHair) {
@@ -1655,7 +1652,7 @@ BOOL _sessionInterrupted = NO;
             [userInfo setValue:@"AVSemanticSegmentationMatteTypeSkin" forKey:@"type"];
         }
         [[NSNotificationCenter defaultCenter] postNotificationName:@"didReceiveMatte" object:nil userInfo:userInfo];
-            }
+    }
 }
 
 

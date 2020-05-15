@@ -18,9 +18,6 @@
 @property (nonatomic,strong) UIPinchGestureRecognizer *pinchGestureRecognizer;
 @property (nonatomic, strong) RCTPromiseResolveBlock videoRecordedResolve;
 @property (nonatomic, strong) RCTPromiseRejectBlock videoRecordedReject;
-@property (nonatomic, strong) id textDetector;
-@property (nonatomic, strong) id faceDetector;
-@property (nonatomic, strong) id barcodeDetector;
 
 @property (nonatomic, copy) RCTDirectEventBlock onCameraReady;
 @property (nonatomic, copy) RCTDirectEventBlock onPhoto;
@@ -29,15 +26,12 @@
 @property (nonatomic, copy) RCTDirectEventBlock onMountError;
 @property (nonatomic, copy) RCTDirectEventBlock onBarCodeRead;
 @property (nonatomic, copy) RCTDirectEventBlock onTextRecognized;
-@property (nonatomic, copy) RCTDirectEventBlock onFacesDetected;
-@property (nonatomic, copy) RCTDirectEventBlock onGoogleVisionBarcodesDetected;
+
 @property (nonatomic, copy) RCTDirectEventBlock onPictureTaken;
 @property (nonatomic, copy) RCTDirectEventBlock onPictureSaved;
 @property (nonatomic, copy) RCTDirectEventBlock onRecordingStart;
 @property (nonatomic, copy) RCTDirectEventBlock onRecordingEnd;
 @property (nonatomic, assign) BOOL finishedReadingText;
-@property (nonatomic, assign) BOOL finishedDetectingFace;
-@property (nonatomic, assign) BOOL finishedDetectingBarcodes;
 @property (nonatomic, copy) NSDate *startText;
 @property (nonatomic, copy) NSDate *startFace;
 @property (nonatomic, copy) NSDate *startBarcode;
@@ -65,12 +59,7 @@ BOOL _sessionInterrupted = NO;
         self.session = [AVCaptureSession new];
         self.sessionQueue = dispatch_queue_create("cameraQueue", DISPATCH_QUEUE_SERIAL);
         self.sensorOrientationChecker = [RNSensorOrientationChecker new];
-        self.textDetector = [self createTextDetector];
-        self.faceDetector = [self createFaceDetectorMlKit];
-        self.barcodeDetector = [self createBarcodeDetectorMlKit];
         self.finishedReadingText = true;
-        self.finishedDetectingFace = true;
-        self.finishedDetectingBarcodes = true;
         self.startText = [NSDate date];
         self.startFace = [NSDate date];
         self.startBarcode = [NSDate date];
@@ -843,15 +832,6 @@ BOOL _sessionInterrupted = NO;
     return;
 #endif
     dispatch_async(self.sessionQueue, ^{
-        if ([self.textDetector isRealDetector]) {
-            [self stopTextRecognition];
-        }
-        if ([self.faceDetector isRealDetector]) {
-            [self stopFaceDetection];
-        }
-        if ([self.barcodeDetector isRealDetector]) {
-            [self stopBarcodeDetection];
-        }
         [self.previewLayer removeFromSuperlayer];
         [self.session commitConfiguration];
         [self.session stopRunning];
@@ -1101,10 +1081,6 @@ BOOL _sessionInterrupted = NO;
         return;
     }
     if (preset) {
-        if (self.canDetectFaces && [preset isEqual:AVCaptureSessionPresetPhoto]) {
-            RCTLog(@"AVCaptureSessionPresetPhoto not supported during face detection. Falling back to AVCaptureSessionPresetHigh");
-            preset = AVCaptureSessionPresetHigh;
-        }
         dispatch_async(self.sessionQueue, ^{
             if ([self.session canSetSessionPreset:preset]) {
                 [self.session beginConfiguration];
@@ -1413,21 +1389,6 @@ BOOL _sessionInterrupted = NO;
     self.orientation = nil;
     self.isRecordingInterrupted = NO;
 
-    if ([self.textDetector isRealDetector] || [self.faceDetector isRealDetector]) {
-        [self cleanupMovieFileCapture];
-    }
-
-    if ([self.textDetector isRealDetector]) {
-        [self setupOrDisableTextDetector];
-    }
-
-    if ([self.faceDetector isRealDetector]) {
-        [self setupOrDisableFaceDetector];
-    }
-
-    if ([self.barcodeDetector isRealDetector]) {
-        [self setupOrDisableBarcodeDetector];
-    }
 
     // reset preset to current default
     AVCaptureSessionPreset preset = [self getDefaultPreset];
@@ -1480,134 +1441,6 @@ BOOL _sessionInterrupted = NO;
     }];
 }
 
-# pragma mark - FaceDetectorMlkit
-
--(id)createFaceDetectorMlKit
-{
-    Class faceDetectorManagerClassMlkit = NSClassFromString(@"FaceDetectorManagerMlkit");
-    return [[faceDetectorManagerClassMlkit alloc] init];
-}
-
-- (void)setupOrDisableFaceDetector
-{
-    [self stopFaceDetection];
-}
-
-- (void)stopFaceDetection
-{
-    if (self.videoDataOutput && !self.canReadText) {
-        [self.session removeOutput:self.videoDataOutput];
-    }
-    self.videoDataOutput = nil;
-    AVCaptureSessionPreset preset = [self getDefaultPreset];
-    if (self.session.sessionPreset != preset) {
-        [self updateSessionPreset: preset];
-    }
-}
-
-- (void)updateTrackingEnabled:(id)requestedTracking
-{
-    [self.faceDetector setTracking:requestedTracking queue:self.sessionQueue];
-}
-
-- (void)updateFaceDetectionMode:(id)requestedMode
-{
-    [self.faceDetector setPerformanceMode:requestedMode queue:self.sessionQueue];
-}
-
-- (void)updateFaceDetectionLandmarks:(id)requestedLandmarks
-{
-    [self.faceDetector setLandmarksMode:requestedLandmarks queue:self.sessionQueue];
-}
-
-- (void)updateFaceDetectionClassifications:(id)requestedClassifications
-{
-    [self.faceDetector setClassificationMode:requestedClassifications queue:self.sessionQueue];
-}
-
-- (void)onFacesDetected:(NSDictionary *)event
-{
-    if (_onFacesDetected && _session) {
-        _onFacesDetected(event);
-    }
-}
-
-# pragma mark - BarcodeDetectorMlkit
-
--(id)createBarcodeDetectorMlKit
-{
-    Class barcodeDetectorManagerClassMlkit = NSClassFromString(@"BarcodeDetectorManagerMlkit");
-    return [[barcodeDetectorManagerClassMlkit alloc] init];
-}
-
-- (void)setupOrDisableBarcodeDetector
-{
-
-    [self stopBarcodeDetection];
-}
-
-- (void)stopBarcodeDetection
-{
-    if (self.videoDataOutput && !self.canReadText) {
-        [self.session removeOutput:self.videoDataOutput];
-    }
-    self.videoDataOutput = nil;
-    AVCaptureSessionPreset preset = [self getDefaultPreset];
-    if (self.session.sessionPreset != preset) {
-        [self updateSessionPreset: preset];
-    }
-}
-
-- (void)updateGoogleVisionBarcodeType:(id)requestedTypes
-{
-    [self.barcodeDetector setType:requestedTypes queue:self.sessionQueue];
-}
-
-- (void)onBarcodesDetected:(NSDictionary *)event
-{
-    if (_onGoogleVisionBarcodesDetected && _session) {
-        _onGoogleVisionBarcodesDetected(event);
-    }
-}
-
-# pragma mark - TextDetector
-
--(id)createTextDetector
-{
-    Class textDetectorManagerClass = NSClassFromString(@"TextDetectorManager");
-    return [[textDetectorManagerClass alloc] init];
-}
-
-- (void)setupOrDisableTextDetector
-{
-    if ([self canReadText] && [self.textDetector isRealDetector]){
-        if (!self.videoDataOutput) {
-            self.videoDataOutput = [[AVCaptureVideoDataOutput alloc] init];
-            if (![self.session canAddOutput:_videoDataOutput]) {
-                NSLog(@"Failed to setup video data output");
-                [self stopTextRecognition];
-                return;
-            }
-            NSDictionary *rgbOutputSettings = [NSDictionary
-                dictionaryWithObject:[NSNumber numberWithInt:kCMPixelFormat_32BGRA]
-                                forKey:(id)kCVPixelBufferPixelFormatTypeKey];
-            [self.videoDataOutput setVideoSettings:rgbOutputSettings];
-            [self.videoDataOutput setAlwaysDiscardsLateVideoFrames:YES];
-            [self.videoDataOutput setSampleBufferDelegate:self queue:self.sessionQueue];
-            [self.session addOutput:_videoDataOutput];
-        }
-    } else {
-        [self stopTextRecognition];
-    }
-}
-
-- (void)stopTextRecognition
-{
-    if (self.videoDataOutput && !self.canDetectFaces) {
-        [self.session removeOutput:self.videoDataOutput];
-    }
-    self.videoDataOutput = nil;
-}
 - (bool)isRecording {
     return self.movieFileOutput != nil ? self.movieFileOutput.isRecording : NO;
 }

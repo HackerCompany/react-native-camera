@@ -41,10 +41,7 @@
 @property(assign, nonatomic) AVCaptureSessionPreset pictureSize;
 @property(nonatomic, assign) BOOL isReadingBarCodes;
 @property(nonatomic, assign) BOOL isRecordingInterrupted;
-@property(nonatomic, assign) BOOL isDetectingFaces;
 @property(nonatomic, assign) BOOL canReadText;
-@property(nonatomic, assign) BOOL canDetectFaces;
-@property(nonatomic, assign) BOOL canDetectBarcodes;
 @property(nonatomic, assign) BOOL captureAudio;
 @property(nonatomic, assign) BOOL keepAudioSession;
 @property(nonatomic, assign) BOOL useNativeZoom;
@@ -71,11 +68,7 @@
 - (void)updateExposure;
 - (void)updatePictureSize;
 - (void)updateCaptureAudio;
-// Face Detection props
-- (void)updateTrackingEnabled:(id)requestedTracking;
-- (void)updateFaceDetectionMode:(id)requestedMode;
-- (void)updateFaceDetectionLandmarks:(id)requestedLandmarks;
-- (void)updateFaceDetectionClassifications:(id)requestedClassifications;
+
 - (void)updateRectOfInterest;
 // google Barcode props
 - (void)updateGoogleVisionBarcodeType:(id)requestedTypes;
@@ -90,19 +83,15 @@
 - (void)pausePreview;
 - (void)setupOrDisablePinchZoom;
 - (void)setupOrDisableBarcodeScanner;
-- (void)setupOrDisableTextDetector;
-- (void)setupOrDisableFaceDetector;
-- (void)setupOrDisableBarcodeDetector;
+
 - (void)onReady:(NSDictionary *)event;
 - (void)onMountingError:(NSDictionary *)event;
 - (void)onCodeRead:(NSDictionary *)event;
-- (void)onFacesDetected:(NSDictionary *)event;
 - (void)onPictureTaken:(NSDictionary *)event;
 - (void)onPictureSaved:(NSDictionary *)event;
 - (void)onRecordingStart:(NSDictionary *)event;
 - (void)onRecordingEnd:(NSDictionary *)event;
 - (void)onText:(NSDictionary *)event;
-- (void)onBarcodesDetected:(NSDictionary *)event;
 - (bool)isRecording;
 - (void)onSubjectAreaChanged:(NSDictionary *)event;
 

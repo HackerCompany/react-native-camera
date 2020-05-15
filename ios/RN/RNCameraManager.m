@@ -19,9 +19,6 @@ RCT_EXPORT_VIEW_PROPERTY(onCameraReady, RCTDirectEventBlock);
 RCT_EXPORT_VIEW_PROPERTY(onAudioInterrupted, RCTDirectEventBlock);
 RCT_EXPORT_VIEW_PROPERTY(onAudioConnected, RCTDirectEventBlock);
 RCT_EXPORT_VIEW_PROPERTY(onMountError, RCTDirectEventBlock);
-RCT_EXPORT_VIEW_PROPERTY(onBarCodeRead, RCTDirectEventBlock);
-RCT_EXPORT_VIEW_PROPERTY(onFacesDetected, RCTDirectEventBlock);
-RCT_EXPORT_VIEW_PROPERTY(onGoogleVisionBarcodesDetected, RCTDirectEventBlock);
 RCT_EXPORT_VIEW_PROPERTY(onPictureTaken, RCTDirectEventBlock);
 RCT_EXPORT_VIEW_PROPERTY(onPictureSaved, RCTDirectEventBlock);
 RCT_EXPORT_VIEW_PROPERTY(onRecordingStart, RCTDirectEventBlock);
@@ -272,32 +269,6 @@ RCT_CUSTOM_VIEW_PROPERTY(pictureSize, NSString *, RNCamera)
 }
 
 
-RCT_CUSTOM_VIEW_PROPERTY(faceDetectorEnabled, BOOL, RNCamera)
-{
-    view.canDetectFaces = [RCTConvert BOOL:json];
-    [view setupOrDisableFaceDetector];
-}
-
-RCT_CUSTOM_VIEW_PROPERTY(trackingEnabled, BOOL, RNCamera)
-{
-    [view updateTrackingEnabled:json];
-}
-
-RCT_CUSTOM_VIEW_PROPERTY(faceDetectionMode, NSInteger, RNCamera)
-{
-    [view updateFaceDetectionMode:json];
-}
-
-RCT_CUSTOM_VIEW_PROPERTY(faceDetectionLandmarks, NSString, RNCamera)
-{
-    [view updateFaceDetectionLandmarks:json];
-}
-
-RCT_CUSTOM_VIEW_PROPERTY(faceDetectionClassifications, NSString, RNCamera)
-{
-    [view updateFaceDetectionClassifications:json];
-}
-
 RCT_CUSTOM_VIEW_PROPERTY(barCodeScannerEnabled, BOOL, RNCamera)
 {
 
@@ -308,24 +279,6 @@ RCT_CUSTOM_VIEW_PROPERTY(barCodeScannerEnabled, BOOL, RNCamera)
 RCT_CUSTOM_VIEW_PROPERTY(barCodeTypes, NSArray, RNCamera)
 {
     [view setBarCodeTypes:[RCTConvert NSArray:json]];
-}
-
-RCT_CUSTOM_VIEW_PROPERTY(googleVisionBarcodeType, NSString, RNCamera)
-{
-    [view updateGoogleVisionBarcodeType:json];
-}
-
-RCT_CUSTOM_VIEW_PROPERTY(googleVisionBarcodeDetectorEnabled, BOOL, RNCamera)
-{
-    view.canDetectBarcodes = [RCTConvert BOOL:json];
-    [view setupOrDisableBarcodeDetector];
-}
-
-RCT_CUSTOM_VIEW_PROPERTY(textRecognizerEnabled, BOOL, RNCamera)
-{
-
-    view.canReadText = [RCTConvert BOOL:json];
-    [view setupOrDisableTextDetector];
 }
 
 RCT_CUSTOM_VIEW_PROPERTY(captureAudio, BOOL, RNCamera)

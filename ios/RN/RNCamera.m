@@ -87,6 +87,7 @@ BOOL _sessionInterrupted = NO;
         self.cameraId = nil;
         self.isFocusedOnPoint = NO;
         self.isExposedOnPoint = NO;
+        self.didCapture = NO;
         _recordRequested = NO;
         _sessionInterrupted = NO;
 
@@ -755,6 +756,7 @@ BOOL _sessionInterrupted = NO;
         reject(@"E_IMAGE_CAPTURE_FAILED", @"Camera is not ready.", nil);
         return;
     }
+    self.didCapture = YES;
 
 
     AVCaptureConnection *connection = [self.stillImageOutput connectionWithMediaType:AVMediaTypeVideo];
@@ -817,8 +819,15 @@ BOOL _sessionInterrupted = NO;
             [self.session addOutput:stillImageOutput];
             self.stillImageOutput = stillImageOutput;
             [stillImageOutput setDepthDataDeliveryEnabled:YES];
-
         }
+        
+        AVCaptureVideoDataOutput *videoOutput = [[AVCaptureVideoDataOutput alloc] init];
+        NSMutableDictionary *options = [[NSMutableDictionary alloc] init];
+        [options setValue:[NSNumber numberWithInt:kCVPixelFormatType_32BGRA] forKey:(id)kCVPixelBufferPixelFormatTypeKey];
+        videoOutput.videoSettings = options;
+        [videoOutput setSampleBufferDelegate:self queue:dispatch_get_main_queue()];
+           
+        [self.session addOutput:videoOutput];
         
         [self setupOrDisableBarcodeScanner];
 
@@ -1599,70 +1608,6 @@ BOOL _sessionInterrupted = NO;
     }
     self.videoDataOutput = nil;
 }
-
-# pragma mark - mlkit
-
-- (void)captureOutput:(AVCaptureOutput *)captureOutput
-    didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
-           fromConnection:(AVCaptureConnection *)connection
-{
-    if (![self.textDetector isRealDetector] && ![self.faceDetector isRealDetector] && ![self.barcodeDetector isRealDetector]) {
-        NSLog(@"failing real check");
-        return;
-    }
-
-    // Do not submit image for text/face recognition too often:
-    // 1. we only dispatch events every 500ms anyway
-    // 2. wait until previous recognition is finished
-    // 3. let user disable text recognition, e.g. onTextRecognized={someCondition ? null : this.textRecognized}
-    NSDate *methodFinish = [NSDate date];
-    NSTimeInterval timePassedSinceSubmittingForText = [methodFinish timeIntervalSinceDate:self.startText];
-    NSTimeInterval timePassedSinceSubmittingForFace = [methodFinish timeIntervalSinceDate:self.startFace];
-    NSTimeInterval timePassedSinceSubmittingForBarcode = [methodFinish timeIntervalSinceDate:self.startBarcode];
-    BOOL canSubmitForTextDetection = timePassedSinceSubmittingForText > 0.5 && _finishedReadingText && self.canReadText && [self.textDetector isRealDetector];
-    BOOL canSubmitForFaceDetection = timePassedSinceSubmittingForFace > 0.5 && _finishedDetectingFace && self.canDetectFaces && [self.faceDetector isRealDetector];
-    BOOL canSubmitForBarcodeDetection = timePassedSinceSubmittingForBarcode > 0.5 && _finishedDetectingBarcodes && self.canDetectBarcodes && [self.barcodeDetector isRealDetector];
-    if (canSubmitForFaceDetection || canSubmitForTextDetection || canSubmitForBarcodeDetection) {
-        CGSize previewSize = CGSizeMake(_previewLayer.frame.size.width, _previewLayer.frame.size.height);
-        NSInteger position = self.videoCaptureDeviceInput.device.position;
-        UIImage *image = [RNCameraUtils convertBufferToUIImage:sampleBuffer previewSize:previewSize position:position];
-        // take care of the fact that preview dimensions differ from the ones of the image that we submit for text detection
-        float scaleX = _previewLayer.frame.size.width / image.size.width;
-        float scaleY = _previewLayer.frame.size.height / image.size.height;
-
-        // find text features
-        if (canSubmitForTextDetection) {
-            _finishedReadingText = false;
-            self.startText = [NSDate date];
-            [self.textDetector findTextBlocksInFrame:image scaleX:scaleX scaleY:scaleY completed:^(NSArray * textBlocks) {
-                NSDictionary *eventText = @{@"type" : @"TextBlock", @"textBlocks" : textBlocks};
-                [self onText:eventText];
-                self.finishedReadingText = true;
-            }];
-        }
-        // find face features
-        if (canSubmitForFaceDetection) {
-            _finishedDetectingFace = false;
-            self.startFace = [NSDate date];
-            [self.faceDetector findFacesInFrame:image scaleX:scaleX scaleY:scaleY completed:^(NSArray * faces) {
-                NSDictionary *eventFace = @{@"type" : @"face", @"faces" : faces};
-                [self onFacesDetected:eventFace];
-                self.finishedDetectingFace = true;
-            }];
-        }
-        // find barcodes
-        if (canSubmitForBarcodeDetection) {
-            _finishedDetectingBarcodes = false;
-            self.startBarcode = [NSDate date];
-            [self.barcodeDetector findBarcodesInFrame:image scaleX:scaleX scaleY:scaleY completed:^(NSArray * barcodes) {
-                NSDictionary *eventBarcode = @{@"type" : @"barcode", @"barcodes" : barcodes};
-                [self onBarcodesDetected:eventBarcode];
-                self.finishedDetectingBarcodes = true;
-            }];
-        }
-    }
-}
-
 - (bool)isRecording {
     return self.movieFileOutput != nil ? self.movieFileOutput.isRecording : NO;
 }
@@ -1788,6 +1733,40 @@ BOOL _sessionInterrupted = NO;
     return orientedImage;
 }
 
+-(void)captureOutput:(AVCaptureOutput *)output didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer fromConnection:(AVCaptureConnection *)connection {
+    if (self.didCapture) {
+        CGImageRef *image = [self getImageFromSampleBuffer:sampleBuffer];
+        NSLog(@"buffer");
+        struct CGImageDestination *destination = CGImageDestinationCreateWithURL(CFBridgingRetain(matteFileName), kUTTypeJPEG, 1, nil);
+
+        CGImageDestinationAddImage(destination, image, nil);
+        CGImageDestinationFinalize(destination);
+        NSMutableDictionary *userInfo = [NSMutableDictionary dictionaryWithObject:[matteFileName absoluteString] forKey:@"name"];
+        [[NSNotificationCenter defaultCenter] postNotificationName:@"didReceivePreviewImage" object:nil userInfo:userInfo];
+               }
+        self.didCapture = NO;
+    }
+}
+
+-(CGImageRef)getImageFromSampleBuffer:(CMSampleBufferRef)sampleBuffer {
+    CVImageBufferRef *pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer);
+    CVPixelBufferLockBaseAddress(pixelBuffer, kCVPixelBufferLock_ReadOnly);
+    
+    void *baseAddress = CVPixelBufferGetBaseAddress(pixelBuffer);
+    int width = CVPixelBufferGetWidth(pixelBuffer);
+    int height = CVPixelBufferGetHeight(pixelBuffer);
+    int bytesPerRow = CVPixelBufferGetBytesPerRow(pixelBuffer);
+    
+    CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
+    uint32_t bitmapInfo = kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Little;
+
+    
+    CGContextRef contextRef = CGBitmapContextCreate(baseAddress, width, height, 8, bytesPerRow, colorSpace, bitmapInfo);
+    
+    CGImageRef *image = CGBitmapContextCreateImage(contextRef);
+    CVPixelBufferUnlockBaseAddress(pixelBuffer, kCVPixelBufferLock_ReadOnly);
+    return image;
+}
 
 - (void)captureOutput:(AVCapturePhotoOutput *)output didFinishProcessingPhoto:(AVCapturePhoto *)photo error:(NSError *)error {
     NSLog(@"output");

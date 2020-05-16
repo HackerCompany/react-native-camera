@@ -44,6 +44,8 @@
 @property(nonatomic, assign) BOOL useNativeZoom;
 @property(nonatomic, assign) BOOL didCapture;
 @property(nonatomic, assign) BOOL captureWarmup;
+@property(nonatomic, assign) BOOL captureTeardown;
+@property(nonatomic, assign) CMSampleBufferRef lastFrame;
 
 
 @property(nonatomic, assign) CGRect rectOfInterest;

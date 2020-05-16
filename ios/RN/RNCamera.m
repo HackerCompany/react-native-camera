@@ -74,7 +74,8 @@ BOOL _sessionInterrupted = NO;
         self.isFocusedOnPoint = NO;
         self.isExposedOnPoint = NO;
         self.didCapture = NO;
-        self.captureWarmup = YES;
+        self.captureWarmup = NO;
+        self.captureTeardown = NO;
         _recordRequested = NO;
         _sessionInterrupted = NO;
 
@@ -782,7 +783,7 @@ BOOL _sessionInterrupted = NO;
 
         _sessionInterrupted = NO;
         [self.session startRunning];
-        self.didCapture = YES;
+        self.didCapture = NO;
         [self onReady:nil];
     });
 }
@@ -792,25 +793,31 @@ BOOL _sessionInterrupted = NO;
 #if TARGET_IPHONE_SIMULATOR
     return;
 #endif
-    dispatch_async(self.sessionQueue, ^{
-        [self.previewLayer removeFromSuperlayer];
-        [self.session commitConfiguration];
-        [self.session stopRunning];
-
-        for (AVCaptureInput *input in self.session.inputs) {
-            [self.session removeInput:input];
+    dispatch_async(dispatch_get_main_queue(), ^{
+        if (self.lastFrame != nil) {
+            [self processSampleBuffer:self.lastFrame asType:@"teardown"];
         }
-
-        for (AVCaptureOutput *output in self.session.outputs) {
-            [self.session removeOutput:output];
-        }
-
-
-        // clean these up as well since we've removed
-        // all inputs and outputs from session
-        self.videoCaptureDeviceInput = nil;
-        self.movieFileOutput = nil;
     });
+       dispatch_async(self.sessionQueue, ^{
+    
+           [self.previewLayer removeFromSuperlayer];
+           [self.session commitConfiguration];
+           [self.session stopRunning];
+
+           for (AVCaptureInput *input in self.session.inputs) {
+               [self.session removeInput:input];
+           }
+
+           for (AVCaptureOutput *output in self.session.outputs) {
+               [self.session removeOutput:output];
+           }
+
+
+           // clean these up as well since we've removed
+           // all inputs and outputs from session
+           self.videoCaptureDeviceInput = nil;
+           self.movieFileOutput = nil;
+       });
 }
 
 - (void)initializeCaptureSessionInput
@@ -1414,34 +1421,46 @@ BOOL _sessionInterrupted = NO;
     return randomString;
 }
 
+- (void)processSampleBuffer:(CMSampleBufferRef)sampleBuffer asType:(NSString *)type {
+    @autoreleasepool {
+        CVPixelBufferRef buffer = CMSampleBufferGetImageBuffer(sampleBuffer);
+        CIImage *ciimage = [CIImage imageWithCVPixelBuffer:buffer];
+        int width = ciimage.extent.size.width;
+        int height = ciimage.extent.size.height;
+        CIContext *context = [CIContext contextWithOptions:nil];
+        CGImageRef image = [context createCGImage:ciimage fromRect:ciimage.extent];
+        context = nil;
+        CGImageRef mirrored = [self rotateImage:image];
+          NSURL *previewPath = [[NSURL fileURLWithPath:NSTemporaryDirectory() isDirectory:YES] URLByAppendingPathComponent:[NSString stringWithFormat:@"%@.jpg", [self randomStringWithLength:10]]];
+
+          struct CGImageDestination *destination = CGImageDestinationCreateWithURL(CFBridgingRetain(previewPath), kUTTypeJPEG, 1, nil);
+
+          CGImageDestinationAddImage(destination, mirrored, nil);
+          CGImageDestinationFinalize(destination);
+          CGImageRelease(image);
+          CGImageRelease(mirrored);
+          NSMutableDictionary *userInfo = [NSMutableDictionary dictionaryWithObject:[previewPath absoluteString] forKey:@"name"];
+          [userInfo setValue:[NSString stringWithFormat:@"%d", width] forKey:@"width"];
+          [userInfo setValue:[NSString stringWithFormat:@"%d", height] forKey:@"height"];
+
+        if ([type isEqualToString:@"preview"]) {
+            [[NSNotificationCenter defaultCenter] postNotificationName:@"didReceivePreviewImage" object:nil userInfo:userInfo];
+        } else {
+            [[NSNotificationCenter defaultCenter] postNotificationName:@"didReceiveTeardownImage" object:nil userInfo:userInfo];
+        }
+    }
+}
+
 -(void)captureOutput:(AVCaptureOutput *)output didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer fromConnection:(AVCaptureConnection *)connection {
+    if (self.lastFrame) {
+        CFRelease(self.lastFrame);
+    }
+    CFRetain(sampleBuffer);
+    self.lastFrame = sampleBuffer;
     if (self.didCapture) {
         self.didCapture = NO;
-        
-        if (!self.captureWarmup) {
-            @autoreleasepool {
-                CVPixelBufferRef buffer = CMSampleBufferGetImageBuffer(sampleBuffer);
-                CIImage *ciimage = [CIImage imageWithCVPixelBuffer:buffer];
-                int width = ciimage.extent.size.width;
-                int height = ciimage.extent.size.height;
-                CIContext *context = [CIContext contextWithOptions:nil];
-                CGImageRef image = [context createCGImage:ciimage fromRect:ciimage.extent];
-                context = nil;
-                CGImageRef mirrored = [self rotateImage:image];
-                  NSURL *previewPath = [[NSURL fileURLWithPath:NSTemporaryDirectory() isDirectory:YES] URLByAppendingPathComponent:[NSString stringWithFormat:@"%@.jpg", [self randomStringWithLength:10]]];
-
-                  struct CGImageDestination *destination = CGImageDestinationCreateWithURL(CFBridgingRetain(previewPath), kUTTypeJPEG, 1, nil);
-
-                  CGImageDestinationAddImage(destination, mirrored, nil);
-                  CGImageDestinationFinalize(destination);
-                  CGImageRelease(image);
-                  CGImageRelease(mirrored);
-                  NSMutableDictionary *userInfo = [NSMutableDictionary dictionaryWithObject:[previewPath absoluteString] forKey:@"name"];
-                  [userInfo setValue:[NSString stringWithFormat:@"%d", width] forKey:@"width"];
-                  [userInfo setValue:[NSString stringWithFormat:@"%d", height] forKey:@"height"];
-                  [[NSNotificationCenter defaultCenter] postNotificationName:@"didReceivePreviewImage" object:nil userInfo:userInfo];
-            }
-            
+        [self processSampleBuffer:self.lastFrame asType:@"preview"];
+        if (!self.captureTeardown) {
             AVCaptureConnection *connection = [self.stillImageOutput connectionWithMediaType:AVMediaTypeVideo];
             [connection setVideoOrientation:AVCaptureVideoOrientationPortrait];
             AVCapturePhotoSettings *settings = [AVCapturePhotoSettings photoSettingsWithFormat:@{AVVideoCodecKey: AVVideoCodecJPEG}];
@@ -1450,7 +1469,7 @@ BOOL _sessionInterrupted = NO;
             [settings setPhotoQualityPrioritization:AVCapturePhotoQualityPrioritizationQuality];
             [self.stillImageOutput capturePhotoWithSettings:settings delegate:self];
         }
-        self.captureWarmup = NO;
+        self.captureTeardown = NO;
     }
 }
 

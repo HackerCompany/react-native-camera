@@ -247,7 +247,7 @@ type Rect = {
 
 type PropsType = typeof View.props & {
   zoom?: number,
-  useNativeZoom?:boolean,
+  useNativeZoom?: boolean,
   maxZoom?: number,
   ratio?: string,
   focusDepth?: number,
@@ -390,7 +390,7 @@ export default class Camera extends React.Component<PropsType, StateType> {
   static propTypes = {
     ...ViewPropTypes,
     zoom: PropTypes.number,
-    useNativeZoom:PropTypes.bool,
+    useNativeZoom: PropTypes.bool,
     maxZoom: PropTypes.number,
     ratio: PropTypes.string,
     focusDepth: PropTypes.number,
@@ -441,7 +441,7 @@ export default class Camera extends React.Component<PropsType, StateType> {
 
   static defaultProps: Object = {
     zoom: 0,
-    useNativeZoom:false,
+    useNativeZoom: false,
     maxZoom: 0,
     ratio: '4:3',
     focusDepth: 0,
@@ -675,7 +675,7 @@ export default class Camera extends React.Component<PropsType, StateType> {
     }
   };
 
-  _onSubjectAreaChanged = e => {
+  _onSubjectAreaChanged = (e) => {
     if (this.props.onSubjectAreaChanged) {
       this.props.onSubjectAreaChanged(e);
     }
@@ -795,34 +795,28 @@ export default class Camera extends React.Component<PropsType, StateType> {
   render() {
     const { style, ...nativeProps } = this._convertNativeProps(this.props);
 
-    if (this.state.isAuthorized || this.hasFaCC()) {
-      return (
-        <View style={style}>
-          <RNCamera
-            {...nativeProps}
-            style={StyleSheet.absoluteFill}
-            ref={this._setReference}
-            onMountError={this._onMountError}
-            onCameraReady={this._onCameraReady}
-            onAudioInterrupted={this._onAudioInterrupted}
-            onAudioConnected={this._onAudioConnected}
-            onGoogleVisionBarcodesDetected={this._onObjectDetected(
-              this.props.onGoogleVisionBarcodesDetected,
-            )}
-            onBarCodeRead={this._onObjectDetected(this.props.onBarCodeRead)}
-            onFacesDetected={this._onObjectDetected(this.props.onFacesDetected)}
-            onTextRecognized={this._onObjectDetected(this.props.onTextRecognized)}
-            onPictureSaved={this._onPictureSaved}
-            onSubjectAreaChanged={this._onSubjectAreaChanged}
-          />
-          {this.renderChildren()}
-        </View>
-      );
-    } else if (!this.state.isAuthorizationChecked) {
-      return this.props.pendingAuthorizationView;
-    } else {
-      return this.props.notAuthorizedView;
-    }
+    return (
+      <View style={style}>
+        <RNCamera
+          {...nativeProps}
+          style={StyleSheet.absoluteFill}
+          ref={this._setReference}
+          onMountError={this._onMountError}
+          onCameraReady={this._onCameraReady}
+          onAudioInterrupted={this._onAudioInterrupted}
+          onAudioConnected={this._onAudioConnected}
+          onGoogleVisionBarcodesDetected={this._onObjectDetected(
+            this.props.onGoogleVisionBarcodesDetected,
+          )}
+          onBarCodeRead={this._onObjectDetected(this.props.onBarCodeRead)}
+          onFacesDetected={this._onObjectDetected(this.props.onFacesDetected)}
+          onTextRecognized={this._onObjectDetected(this.props.onTextRecognized)}
+          onPictureSaved={this._onPictureSaved}
+          onSubjectAreaChanged={this._onSubjectAreaChanged}
+        />
+        {this.renderChildren()}
+      </View>
+    );
   }
 
   _convertNativeProps({ children, ...props }: PropsType) {

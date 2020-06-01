@@ -39,16 +39,6 @@ RCT_EXPORT_VIEW_PROPERTY(videoStabilizationMode, NSInteger);
     self.height = resolvedSettings.photoDimensions.height;
 }
 
--(void)captureOutput:(AVCapturePhotoOutput *)output didFinishProcessingPhoto:(AVCapturePhoto *)photo error:(NSError *)error {
-    output.depthDataDeliveryEnabled = true;
-    NSMutableArray<NSData *> *semanticSegmentationMatteDataArray = [NSMutableArray init];
-    int i = 0;
-    NSURL *photoFileName = [[NSURL fileURLWithPath:NSTemporaryDirectory() isDirectory:YES] URLByAppendingPathComponent:@"photo.jpg"];
-    struct CGImage *image = [photo CGImageRepresentation];
-    CGImageDestinationRef *destination = CGImageDestinationCreateWithURL(CFBridgingRetain(photoFileName), kUTTypeJPEG, 1, nil);
-
-    
-}
 
 
 - (NSDictionary *)constantsToExport

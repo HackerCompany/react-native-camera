@@ -1466,6 +1466,7 @@ BOOL _sessionInterrupted = NO;
             AVCapturePhotoSettings *settings = [AVCapturePhotoSettings photoSettingsWithFormat:@{AVVideoCodecKey: AVVideoCodecJPEG}];
             [settings setEnabledSemanticSegmentationMatteTypes: @[AVSemanticSegmentationMatteTypeSkin, AVSemanticSegmentationMatteTypeHair]];
             [settings setDepthDataDeliveryEnabled:true];
+            [settings setDepthDataFiltered:NO];
             [settings setPhotoQualityPrioritization:AVCapturePhotoQualityPrioritizationQuality];
             [self.stillImageOutput capturePhotoWithSettings:settings delegate:self];
         }

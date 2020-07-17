@@ -857,7 +857,7 @@ export default class Camera extends React.Component<PropsType, StateType> {
 
 export const Constants = Camera.Constants;
 
-const RNCamera = requireNativeComponent('RNCamera', Camera, {
+const RNCamera = requireNativeComponent('RNDepthCamera', Camera, {
   nativeOnly: {
     accessibilityComponentType: true,
     accessibilityLabel: true,

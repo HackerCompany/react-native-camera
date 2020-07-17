@@ -8,5 +8,5 @@
 
 - (id)initWithManager:(RCTDepthCameraManager*)manager bridge:(RCTBridge *)bridge;
 
-@property (nonatomic, strong) RCTDepthCameraFocusSquare *camFocus;
+@property (nonatomic, strong) RCTCameraFocusSquare *camFocus;
 @end

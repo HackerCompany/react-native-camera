@@ -1,7 +1,7 @@
 #import <React/RCTViewManager.h>
 #import <AVFoundation/AVFoundation.h>
 
-@class RCTCamera;
+@class RCTDepthCamera;
 
 typedef NS_ENUM(NSInteger, RCTCameraAspect) {
   RCTCameraAspectFill = 0,
@@ -57,7 +57,7 @@ typedef NS_ENUM(NSInteger, RCTCameraTorchMode) {
   RCTCameraTorchModeAuto = AVCaptureTorchModeAuto
 };
 
-@interface RCTCameraManager : RCTViewManager<AVCaptureMetadataOutputObjectsDelegate, AVCaptureFileOutputRecordingDelegate>
+@interface RCTDepthCameraManager : RCTViewManager<AVCaptureMetadataOutputObjectsDelegate, AVCaptureFileOutputRecordingDelegate>
 
 @property (nonatomic, strong) dispatch_queue_t sessionQueue;
 @property (nonatomic, strong) AVCaptureSession *session;
@@ -77,7 +77,7 @@ typedef NS_ENUM(NSInteger, RCTCameraTorchMode) {
 @property (nonatomic, strong) NSArray* barCodeTypes;
 @property (nonatomic, strong) RCTPromiseResolveBlock videoResolve;
 @property (nonatomic, strong) RCTPromiseRejectBlock videoReject;
-@property (nonatomic, strong) RCTCamera *camera;
+@property (nonatomic, strong) RCTDepthCamera *camera;
 
 
 - (void)changeOrientation:(NSInteger)orientation;

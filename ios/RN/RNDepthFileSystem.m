@@ -1,13 +1,13 @@
 //
-//  RNFileSystem.m
+//  RNDepthFileSystem.m
 //  RCTCamera
 //
 //  Created by Joao Guilherme Daros Fidelis on 19/01/18.
 //
 
-#import "RNFileSystem.h"
+#import "RNDepthFileSystem.h"
 
-@implementation RNFileSystem
+@implementation RNDepthFileSystem
 
 + (BOOL)ensureDirExistsWithPath:(NSString *)path
 {
@@ -26,7 +26,7 @@
 + (NSString *)generatePathInDirectory:(NSString *)directory withExtension:(NSString *)extension
 {
     NSString *fileName = [[[NSUUID UUID] UUIDString] stringByAppendingString:extension];
-    [RNFileSystem ensureDirExistsWithPath:directory];
+    [RNDepthFileSystem ensureDirExistsWithPath:directory];
     return [directory stringByAppendingPathComponent:fileName];
 }
 

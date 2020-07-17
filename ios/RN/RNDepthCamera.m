@@ -1,7 +1,7 @@
 #import "RNDepthCamera.h"
 #import "RNDepthCameraUtils.h"
 #import "RNDepthImageUtils.h"
-#import "RNFileSystem.h"
+#import "RNDepthFileSystem.h"
 #import <React/RCTEventDispatcher.h>
 #import <React/RCTLog.h>
 #import <React/RCTUtils.h>
@@ -1267,7 +1267,7 @@ BOOL _sessionInterrupted = NO;
 
     // Export
     AVAssetExportSession* exportSession = [AVAssetExportSession exportSessionWithAsset:videoAsset presetName:AVAssetExportPreset640x480];
-    NSString* filePath = [RNFileSystem generatePathInDirectory:[[RNFileSystem cacheDirectoryPath] stringByAppendingString:@"CameraFlip"] withExtension:@".mp4"];
+    NSString* filePath = [RNDepthFileSystem generatePathInDirectory:[[RNDepthFileSystem cacheDirectoryPath] stringByAppendingString:@"CameraFlip"] withExtension:@".mp4"];
     NSURL* outputURL = [NSURL fileURLWithPath:filePath];
     [exportSession setOutputURL:outputURL];
     [exportSession setOutputFileType:AVFileTypeMPEG4];

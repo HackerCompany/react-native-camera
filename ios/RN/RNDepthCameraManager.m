@@ -1,6 +1,6 @@
 #import "RNCamera.h"
 #import "RNDepthCameraManager.h"
-#import "RNFileSystem.h"
+#import "RNDepthFileSystem.h"
 #import "RNDepthImageUtils.h"
 #import <React/RCTBridge.h>
 #import <React/RCTUIManager.h>
@@ -303,7 +303,7 @@ RCT_REMAP_METHOD(takePicture,
                 path = options[@"path"];
             }
             else{
-                path = [RNFileSystem generatePathInDirectory:[[RNFileSystem cacheDirectoryPath] stringByAppendingPathComponent:@"Camera"] withExtension:@".jpg"];
+                path = [RNDepthFileSystem generatePathInDirectory:[[RNDepthFileSystem cacheDirectoryPath] stringByAppendingPathComponent:@"Camera"] withExtension:@".jpg"];
             }
             UIImage *generatedPhoto = [RNDepthImageUtils generatePhotoOfSize:CGSizeMake(200, 200)];
             BOOL useFastMode = options[@"fastMode"] && [options[@"fastMode"] boolValue];

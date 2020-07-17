@@ -1,23 +1,23 @@
 //
-//  RCTSensorOrientationChecker.m
+//  RCTDepthSensorOrientationChecker.m
 //  RCTCamera
 //
 //  Created by Radu Popovici on 24/03/16.
 //
 //
 
-#import "RCTSensorOrientationChecker.h"
+#import "RCTDepthSensorOrientationChecker.h"
 #import <CoreMotion/CoreMotion.h>
 
 
-@interface RCTSensorOrientationChecker ()
+@interface RCTDepthSensorOrientationChecker ()
 
 @property (strong, nonatomic) CMMotionManager * motionManager;
 @property (strong, nonatomic) RCTSensorCallback orientationCallback;
 
 @end
 
-@implementation RCTSensorOrientationChecker
+@implementation RCTDepthSensorOrientationChecker
 
 - (instancetype)init
 {

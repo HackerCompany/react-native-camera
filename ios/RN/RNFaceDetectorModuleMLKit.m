@@ -1,13 +1,13 @@
-#import "RNFaceDetectorModuleMLKit.h"
+#import "RNDepthFaceDetectorModuleMLKit.h"
 #if __has_include(<FirebaseMLVision/FirebaseMLVision.h>)
-#import "RNFileSystem.h"
+#import "RNDepthFileSystem.h"
 #import "RNDepthImageUtils.h"
 
 static const NSString *kModeOptionName = @"mode";
 static const NSString *kDetectLandmarksOptionName = @"detectLandmarks";
 static const NSString *kRunClassificationsOptionName = @"runClassifications";
 
-@implementation RNFaceDetectorModuleMLKit
+@implementation RNDepthFaceDetectorModuleMLKit
 
 static NSFileManager *fileManager = nil;
 static NSDictionary *defaultDetectorOptions = nil;
@@ -118,7 +118,7 @@ RCT_EXPORT_METHOD(detectFaces:(nonnull NSDictionary *)options
 
 @end
 #else
-@implementation RNFaceDetectorModuleMLKit
+@implementation RNDepthFaceDetectorModuleMLKit
 
 @synthesize bridge = _bridge;
 

@@ -1,7 +1,7 @@
 #import "RNFaceDetectorModuleMLKit.h"
 #if __has_include(<FirebaseMLVision/FirebaseMLVision.h>)
 #import "RNFileSystem.h"
-#import "RNImageUtils.h"
+#import "RNDepthImageUtils.h"
 
 static const NSString *kModeOptionName = @"mode";
 static const NSString *kDetectLandmarksOptionName = @"detectLandmarks";
@@ -72,7 +72,7 @@ RCT_EXPORT_METHOD(detectFaces:(nonnull NSDictionary *)options
         }
 
         UIImage *image = [[UIImage alloc] initWithContentsOfFile:path];
-        UIImage *rotatedImage = [RNImageUtils forceUpOrientation:image];
+        UIImage *rotatedImage = [RNDepthImageUtils forceUpOrientation:image];
 
         Class faceDetectorManagerClassMlkit = NSClassFromString(@"FaceDetectorManagerMlkit");
         id faceDetector = [[faceDetectorManagerClassMlkit alloc] init];

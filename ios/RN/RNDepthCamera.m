@@ -1,4 +1,4 @@
-#import "RNCamera.h"
+#import "RNDepthCamera.h"
 #import "RNDepthCameraUtils.h"
 #import "RNDepthImageUtils.h"
 #import "RNFileSystem.h"
@@ -39,7 +39,7 @@
 
 @end
 
-@implementation RNCamera
+@implementation RNDepthCamera
 
 static NSDictionary *defaultFaceDetectorOptions = nil;
 
@@ -1312,7 +1312,7 @@ BOOL _sessionInterrupted = NO;
 }
 
 - (void)recognizeFacialLandmarks:(AVCapturePhoto *)photo {
-    RNCamera *_self = self;
+    RNDepthCamera *_self = self;
 
         VNDetectFaceLandmarksRequest *request = [[VNDetectFaceLandmarksRequest alloc] initWithCompletionHandler:^(VNRequest * _Nonnull request, NSError * _Nullable error) {
         if (error != nil) {

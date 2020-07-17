@@ -1,7 +1,7 @@
 #import "RNCamera.h"
 #import "RNDepthCameraManager.h"
 #import "RNFileSystem.h"
-#import "RNImageUtils.h"
+#import "RNDepthImageUtils.h"
 #import <React/RCTBridge.h>
 #import <React/RCTUIManager.h>
 #import <React/RCTEventDispatcher.h>
@@ -305,7 +305,7 @@ RCT_REMAP_METHOD(takePicture,
             else{
                 path = [RNFileSystem generatePathInDirectory:[[RNFileSystem cacheDirectoryPath] stringByAppendingPathComponent:@"Camera"] withExtension:@".jpg"];
             }
-            UIImage *generatedPhoto = [RNImageUtils generatePhotoOfSize:CGSizeMake(200, 200)];
+            UIImage *generatedPhoto = [RNDepthImageUtils generatePhotoOfSize:CGSizeMake(200, 200)];
             BOOL useFastMode = options[@"fastMode"] && [options[@"fastMode"] boolValue];
             if (useFastMode) {
                 resolve(nil);
@@ -315,7 +315,7 @@ RCT_REMAP_METHOD(takePicture,
 
             NSData *photoData = UIImageJPEGRepresentation(generatedPhoto, quality);
             if (![options[@"doNotSave"] boolValue]) {
-                response[@"uri"] = [RNImageUtils writeImage:photoData toPath:path];
+                response[@"uri"] = [RNDepthImageUtils writeImage:photoData toPath:path];
             }
             response[@"width"] = @(generatedPhoto.size.width);
             response[@"height"] = @(generatedPhoto.size.height);

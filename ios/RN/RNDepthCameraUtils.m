@@ -1,13 +1,13 @@
 //
-//  RNCameraUtils.m
+//  RNDepthCameraUtils.m
 //  RCTCamera
 //
 //  Created by Joao Guilherme Daros Fidelis on 19/01/18.
 //
 
-#import "RNCameraUtils.h"
+#import "RNDepthCameraUtils.h"
 
-@implementation RNCameraUtils
+@implementation RNDepthCameraUtils
 
 # pragma mark - Camera utilities
 

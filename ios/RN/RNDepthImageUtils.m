@@ -1,13 +1,13 @@
 //
-//  RNImageUtils.m
+//  RNDepthImageUtils.m
 //  RCTCamera
 //
 //  Created by Joao Guilherme Daros Fidelis on 19/01/18.
 //
 
-#import "RNImageUtils.h"
+#import "RNDepthImageUtils.h"
 
-@implementation RNImageUtils
+@implementation RNDepthImageUtils
 
 + (UIImage *)generatePhotoOfSize:(CGSize)size
 {

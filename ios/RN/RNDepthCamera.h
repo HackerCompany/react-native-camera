@@ -6,9 +6,9 @@
 #import "FaceDetectorManagerMlkit.h"
 #import "BarcodeDetectorManagerMlkit.h"
 
-@class RNCamera;
+@class RNDepthCamera;
 
-@interface RNCamera : UIView <AVCaptureMetadataOutputObjectsDelegate,
+@interface RNDepthCamera : UIView <AVCaptureMetadataOutputObjectsDelegate,
                               AVCaptureFileOutputRecordingDelegate,
                               AVCaptureVideoDataOutputSampleBufferDelegate, AVCapturePhotoCaptureDelegate>
 

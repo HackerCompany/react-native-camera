@@ -1,5 +1,5 @@
 //
-//  RNCameraUtils.h
+//  RNDepthCameraUtils.h
 //  RCTCamera
 //
 //  Created by Joao Guilherme Daros Fidelis on 19/01/18.
@@ -8,7 +8,7 @@
 #import <UIKit/UIKit.h>
 #import "RNDepthCameraManager.h"
 
-@interface RNCameraUtils : NSObject
+@interface RNDepthCameraUtils : NSObject
 
 // Camera utilities
 + (AVCaptureDevice *)deviceWithMediaType:(NSString *)mediaType preferringPosition:(AVCaptureDevicePosition)position;

@@ -77,7 +77,7 @@ public class CameraModule extends ReactContextBaseJavaModule {
 
   @Override
   public String getName() {
-    return "RNCameraModule";
+    return "RNDepthCameraModule";
   }
 
   @Nullable

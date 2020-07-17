@@ -311,7 +311,7 @@ const RecordAudioPermissionStatusEnum: {
 };
 
 const CameraManager: Object = NativeModules.RNDepthCameraManager ||
-  NativeModules.RNCameraModule || {
+  NativeModules.RNDepthCameraModule || {
     stubbed: true,
     Type: {
       back: 1,

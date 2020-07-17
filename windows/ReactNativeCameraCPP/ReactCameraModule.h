@@ -27,9 +27,9 @@ namespace winrt {
     using namespace winrt::Windows::Storage::Streams;
 } //namespace winrt
 namespace winrt::ReactNativeCameraCPP {
-    REACT_MODULE(RNCameraModule);
-    struct RNCameraModule {
-        const std::string Name = "RNCameraModule";
+    REACT_MODULE(RNDepthCameraModule);
+    struct RNDepthCameraModule {
+        const std::string Name = "RNDepthCameraModule";
 
 #pragma region Constants
         REACT_CONSTANT_PROVIDER(ConstantProvider)
@@ -89,9 +89,9 @@ namespace winrt::ReactNativeCameraCPP {
 #pragma endregion
 
     public:
-        RNCameraModule() = default;
+        RNDepthCameraModule() = default;
 
-        ~RNCameraModule() = default;
+        ~RNDepthCameraModule() = default;
 
     };
 

@@ -10,7 +10,7 @@
 #import <Vision/Vision.h>
 #import  "RNDepthSensorOrientationChecker.h"
 
-@interface RNCamera ()
+@interface RNDepthCamera ()
 
 @property (nonatomic, weak) RCTBridge *bridge;
 @property (nonatomic,strong) RNDepthSensorOrientationChecker * sensorOrientationChecker;

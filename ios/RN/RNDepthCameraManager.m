@@ -1,5 +1,5 @@
 #import "RNCamera.h"
-#import "RNCameraManager.h"
+#import "RNDepthCameraManager.h"
 #import "RNFileSystem.h"
 #import "RNImageUtils.h"
 #import <React/RCTBridge.h>
@@ -13,7 +13,7 @@
 
 @implementation RNDepthCameraManager
 
-RCT_EXPORT_MODULE(RNCameraManager);
+RCT_EXPORT_MODULE(RNDepthCameraManager);
 RCT_EXPORT_VIEW_PROPERTY(onCameraReady, RCTDirectEventBlock);
 RCT_EXPORT_VIEW_PROPERTY(onMountError, RCTDirectEventBlock);
 RCT_EXPORT_VIEW_PROPERTY(onPictureTaken, RCTDirectEventBlock);

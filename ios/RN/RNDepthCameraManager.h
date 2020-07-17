@@ -55,7 +55,7 @@ typedef NS_ENUM(NSInteger, RNCameraVideoResolution) {
     RNCameraVideo288p = 4,
 };
 
-@interface RNCameraManager : RCTViewManager <RCTBridgeModule, AVCapturePhotoCaptureDelegate>
+@interface RNDepthCameraManager : RCTViewManager <RCTBridgeModule, AVCapturePhotoCaptureDelegate>
 
 @property (nonatomic, assign) int width;
 @property (nonatomic, assign) int height;

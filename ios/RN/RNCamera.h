@@ -5,7 +5,6 @@
 
 #import "FaceDetectorManagerMlkit.h"
 #import "BarcodeDetectorManagerMlkit.h"
-#import "TextDetectorManager.h"
 
 @class RNCamera;
 

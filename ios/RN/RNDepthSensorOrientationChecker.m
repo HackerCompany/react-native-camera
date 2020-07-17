@@ -1,23 +1,23 @@
 //
-//  RNSensorOrientationChecker.m
+//  RNDepthSensorOrientationChecker.m
 //  RNCamera
 //
 //  Created by Radu Popovici on 24/03/16.
 //
 //
 
-#import "RNSensorOrientationChecker.h"
+#import "RNDepthSensorOrientationChecker.h"
 #import <CoreMotion/CoreMotion.h>
 
 
-@interface RNSensorOrientationChecker ()
+@interface RNDepthSensorOrientationChecker ()
 
 @property (strong, nonatomic) CMMotionManager * motionManager;
 @property (strong, nonatomic) RNSensorCallback orientationCallback;
 
 @end
 
-@implementation RNSensorOrientationChecker
+@implementation RNDepthSensorOrientationChecker
 
 - (instancetype)init
 {

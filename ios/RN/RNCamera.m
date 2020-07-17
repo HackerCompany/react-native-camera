@@ -8,12 +8,12 @@
 #import <React/UIView+React.h>
 #import <MobileCoreServices/MobileCoreServices.h>
 #import <Vision/Vision.h>
-#import  "RNSensorOrientationChecker.h"
+#import  "RNDepthSensorOrientationChecker.h"
 
 @interface RNCamera ()
 
 @property (nonatomic, weak) RCTBridge *bridge;
-@property (nonatomic,strong) RNSensorOrientationChecker * sensorOrientationChecker;
+@property (nonatomic,strong) RNDepthSensorOrientationChecker * sensorOrientationChecker;
 
 @property (nonatomic,strong) UIPinchGestureRecognizer *pinchGestureRecognizer;
 @property (nonatomic, strong) RCTPromiseResolveBlock videoRecordedResolve;
@@ -55,7 +55,7 @@ BOOL _sessionInterrupted = NO;
         self.height = 0;
         self.session = [AVCaptureSession new];
         self.sessionQueue = dispatch_queue_create("cameraQueue", DISPATCH_QUEUE_SERIAL);
-        self.sensorOrientationChecker = [RNSensorOrientationChecker new];
+        self.sensorOrientationChecker = [RNDepthSensorOrientationChecker new];
         self.finishedReadingText = true;
         self.startText = [NSDate date];
         self.startFace = [NSDate date];

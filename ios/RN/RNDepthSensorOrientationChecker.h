@@ -1,5 +1,5 @@
 //
-//  RNSensorOrientationChecker.h
+//  RNDepthSensorOrientationChecker.h
 //  RNCamera
 //
 //  Created by Radu Popovici on 24/03/16.
@@ -11,7 +11,7 @@
 
 typedef void (^RNSensorCallback) (UIInterfaceOrientation orientation);
 
-@interface RNSensorOrientationChecker : NSObject
+@interface RNDepthSensorOrientationChecker : NSObject
 
 @property (assign, nonatomic) UIInterfaceOrientation orientation;
 

@@ -173,7 +173,7 @@ RCT_EXPORT_VIEW_PROPERTY(videoStabilizationMode, NSInteger);
 #endif
 }
 
-RCT_CUSTOM_VIEW_PROPERTY(type, NSInteger, RNDepthCamera)
+RCT_CUSTOM_VIEW_PROPERTY(type, NSInteger, RNCamera)
 {
     NSInteger newType = [RCTConvert NSInteger:json];
     if (view.presetCamera != newType) {
@@ -182,7 +182,7 @@ RCT_CUSTOM_VIEW_PROPERTY(type, NSInteger, RNDepthCamera)
     }
 }
 
-RCT_CUSTOM_VIEW_PROPERTY(cameraId, NSString, RNDepthCamera)
+RCT_CUSTOM_VIEW_PROPERTY(cameraId, NSString, RNCamera)
 {
     NSString *newId = [RCTConvert NSString:json];
 
@@ -195,87 +195,87 @@ RCT_CUSTOM_VIEW_PROPERTY(cameraId, NSString, RNDepthCamera)
     }
 }
 
-RCT_CUSTOM_VIEW_PROPERTY(flashMode, NSInteger, RNDepthCamera)
+RCT_CUSTOM_VIEW_PROPERTY(flashMode, NSInteger, RNCamera)
 {
     [view setFlashMode:[RCTConvert NSInteger:json]];
     [view updateFlashMode];
 }
 
-RCT_CUSTOM_VIEW_PROPERTY(autoFocus, NSInteger, RNDepthCamera)
+RCT_CUSTOM_VIEW_PROPERTY(autoFocus, NSInteger, RNCamera)
 {
     [view setAutoFocus:[RCTConvert NSInteger:json]];
     [view updateFocusMode];
 }
 
-RCT_CUSTOM_VIEW_PROPERTY(autoFocusPointOfInterest, NSDictionary, RNDepthCamera)
+RCT_CUSTOM_VIEW_PROPERTY(autoFocusPointOfInterest, NSDictionary, RNCamera)
 {
     [view setAutoFocusPointOfInterest:[RCTConvert NSDictionary:json]];
     [view updateAutoFocusPointOfInterest];
 }
 
-RCT_CUSTOM_VIEW_PROPERTY(focusDepth, NSNumber, RNDepthCamera)
+RCT_CUSTOM_VIEW_PROPERTY(focusDepth, NSNumber, RNCamera)
 {
     [view setFocusDepth:[RCTConvert float:json]];
     [view updateFocusDepth];
 }
 
-RCT_CUSTOM_VIEW_PROPERTY(useNativeZoom, BOOL, RNDepthCamera)
+RCT_CUSTOM_VIEW_PROPERTY(useNativeZoom, BOOL, RNCamera)
 {
     view.useNativeZoom=[RCTConvert BOOL:json];
     [view setupOrDisablePinchZoom];
 }
 
-RCT_CUSTOM_VIEW_PROPERTY(zoom, NSNumber, RNDepthCamera)
+RCT_CUSTOM_VIEW_PROPERTY(zoom, NSNumber, RNCamera)
 {
     [view setZoom:[RCTConvert CGFloat:json]];
     [view updateZoom];
 }
 
-RCT_CUSTOM_VIEW_PROPERTY(maxZoom, NSNumber, RNDepthCamera)
+RCT_CUSTOM_VIEW_PROPERTY(maxZoom, NSNumber, RNCamera)
 {
     [view setMaxZoom:[RCTConvert CGFloat:json]];
     [view updateZoom];
 }
 
-RCT_CUSTOM_VIEW_PROPERTY(whiteBalance, NSInteger, RNDepthCamera)
+RCT_CUSTOM_VIEW_PROPERTY(whiteBalance, NSInteger, RNCamera)
 {
     [view setWhiteBalance:[RCTConvert NSInteger:json]];
     [view updateWhiteBalance];
 }
 
-RCT_CUSTOM_VIEW_PROPERTY(exposure, NSNumber, RNDepthCamera)
+RCT_CUSTOM_VIEW_PROPERTY(exposure, NSNumber, RNCamera)
 {
     [view setExposure:[RCTConvert float:json]];
     [view updateExposure];
 }
 
-RCT_CUSTOM_VIEW_PROPERTY(pictureSize, NSString *, RNDepthCamera)
+RCT_CUSTOM_VIEW_PROPERTY(pictureSize, NSString *, RNCamera)
 {
     [view setPictureSize:[[self class] pictureSizes][[RCTConvert NSString:json]]];
     [view updatePictureSize];
 }
 
 
-RCT_CUSTOM_VIEW_PROPERTY(barCodeScannerEnabled, BOOL, RNDepthCamera)
+RCT_CUSTOM_VIEW_PROPERTY(barCodeScannerEnabled, BOOL, RNCamera)
 {
 
     view.isReadingBarCodes = [RCTConvert BOOL:json];
     [view setupOrDisableBarcodeScanner];
 }
 
-RCT_CUSTOM_VIEW_PROPERTY(barCodeTypes, NSArray, RNDepthCamera)
+RCT_CUSTOM_VIEW_PROPERTY(barCodeTypes, NSArray, RNCamera)
 {
     [view setBarCodeTypes:[RCTConvert NSArray:json]];
 }
 
 
-RCT_CUSTOM_VIEW_PROPERTY(rectOfInterest, CGRect, RNDepthCamera)
+RCT_CUSTOM_VIEW_PROPERTY(rectOfInterest, CGRect, RNCamera)
 {
     [view setRectOfInterest: [RCTConvert CGRect:json]];
     [view updateRectOfInterest];
 }
 
-RCT_CUSTOM_VIEW_PROPERTY(defaultVideoQuality, NSInteger, RNDepthCamera)
+RCT_CUSTOM_VIEW_PROPERTY(defaultVideoQuality, NSInteger, RNCamera)
 {
     [view setDefaultVideoQuality: [NSNumber numberWithInteger:[RCTConvert NSInteger:json]]];
 }

@@ -3,7 +3,7 @@ import { NativeModules } from 'react-native';
 
 const faceDetectionDisabledMessage = 'Face detection has not been included in this build.';
 
-const FaceDetectorModule: Object = NativeModules.RNFaceDetector || {
+const FaceDetectorModule: Object = NativeModules.RNDepthFaceDetector || {
   stubbed: true,
   Mode: {},
   Landmarks: {},

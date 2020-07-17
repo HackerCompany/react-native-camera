@@ -21,7 +21,7 @@ static NSDictionary *defaultDetectorOptions = nil;
     return self;
 }
 
-RCT_EXPORT_MODULE(RNFaceDetector);
+RCT_EXPORT_MODULE(RNDepthFaceDetector);
 
 @synthesize bridge = _bridge;
 
@@ -137,7 +137,7 @@ RCT_EXPORT_METHOD(detectFaces:(nonnull NSDictionary *)options
     return @{};
 }
 
-RCT_EXPORT_MODULE(RNFaceDetector);
+RCT_EXPORT_MODULE(RNDepthFaceDetector);
 
 @end
 #endif

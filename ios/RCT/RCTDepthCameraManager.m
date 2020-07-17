@@ -1033,7 +1033,7 @@ didFinishRecordingToOutputFileAtURL:(NSURL *)outputFileURL
   {
     [self.camera.camFocus removeFromSuperview];
   }
-  self.camera.camFocus = [[RCTCameraFocusSquare alloc]initWithFrame:CGRectMake([self.view center].x-80, [self.view center].y-80, 160, 160)];
+  self.camera.camFocus = [[RCTDepthCameraFocusSquare alloc]initWithFrame:CGRectMake([self.view center].x-80, [self.view center].y-80, 160, 160)];
   [self.camera.camFocus setBackgroundColor:[UIColor clearColor]];
   [self.view addSubview:self.camera.camFocus];
   [self.camera.camFocus setNeedsDisplay];

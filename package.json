@@ -1,7 +1,7 @@
 {
   "name": "react-native-depth-camera",
   "description": "A Camera component for React Native. Also reads barcodes.",
-  "version": "3.24.15",
+  "version": "3.24.16",
   "author": "Lochlan Wansbrough <lochie@live.com> (http://lwansbrough.com)",
   "collective": {
     "type": "opencollective",

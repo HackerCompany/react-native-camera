@@ -43,8 +43,8 @@
 
 static NSDictionary *defaultFaceDetectorOptions = nil;
 
-BOOL _recordRequested = NO;
-BOOL _sessionInterrupted = NO;
+BOOL _recordRequestedX = NO;
+BOOL _sessionInterruptedX = NO;
 
 
 - (id)initWithBridge:(RCTBridge *)bridge
@@ -76,8 +76,8 @@ BOOL _sessionInterrupted = NO;
         self.didCapture = NO;
         self.captureWarmup = NO;
         self.captureTeardown = NO;
-        _recordRequested = NO;
-        _sessionInterrupted = NO;
+        _recordRequestedX = NO;
+        _sessionInterruptedX = NO;
 
         // we will do other initialization after
         // the view is loaded.
@@ -781,7 +781,7 @@ BOOL _sessionInterrupted = NO;
         
         [self setupOrDisableBarcodeScanner];
 
-        _sessionInterrupted = NO;
+        _sessionInterruptedX = NO;
         [self.session startRunning];
         self.didCapture = NO;
         [self onReady:nil];
@@ -960,7 +960,7 @@ BOOL _sessionInterrupted = NO;
 - (void)sessionWasInterrupted:(NSNotification *)notification
 {
     // Mark session interruption
-    _sessionInterrupted = YES;
+    _sessionInterruptedX = YES;
 
     // Turn on video interrupted if our session is interrupted
     // for any reason
@@ -969,7 +969,7 @@ BOOL _sessionInterrupted = NO;
     }
 
     // prevent any video recording start that we might have on the way
-    _recordRequested = NO;
+    _recordRequestedX = NO;
 
     // get event info and fire RN event if our session was interrupted
     // due to audio being taken away.
@@ -983,16 +983,16 @@ BOOL _sessionInterrupted = NO;
 // update flash and our interrupted flag on session resume
 - (void)sessionDidStartRunning:(NSNotification *)notification
 {
-    //NSLog(@"sessionDidStartRunning Was interrupted? %d", _sessionInterrupted);
+    //NSLog(@"sessionDidStartRunning Was interrupted? %d", _sessionInterruptedX);
 
-    if(_sessionInterrupted){
+    if(_sessionInterruptedX){
         // resume flash value since it will be resetted / turned off
         dispatch_async(self.sessionQueue, ^{
             [self updateFlashMode];
         });
     }
 
-    _sessionInterrupted = NO;
+    _sessionInterruptedX = NO;
 }
 
 - (void)sessionRuntimeError:(NSNotification *)notification
@@ -1000,7 +1000,7 @@ BOOL _sessionInterrupted = NO;
     // Manually restarting the session since it must
     // have been stopped due to an error.
     dispatch_async(self.sessionQueue, ^{
-         _sessionInterrupted = NO;
+         _sessionInterruptedX = NO;
         [self.session startRunning];
         [self onReady:nil];
     });

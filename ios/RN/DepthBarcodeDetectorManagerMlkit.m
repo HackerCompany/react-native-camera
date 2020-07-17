@@ -1,8 +1,8 @@
-#import "BarcodeDetectorManagerMlkit.h"
+#import "DepthBarcodeDetectorManagerMlkit.h"
 #import <React/RCTConvert.h>
 #if __has_include(<FirebaseMLVision/FirebaseMLVision.h>)
 
-@interface BarcodeDetectorManagerMlkit ()
+@interface DepthBarcodeDetectorManagerMlkit ()
 @property(nonatomic, strong) FIRVisionBarcodeDetector *barcodeRecognizer;
 @property(nonatomic, strong) FIRVision *vision;
 @property(nonatomic, assign) FIRVisionBarcodeFormat setOption;
@@ -10,7 +10,7 @@
 @property(nonatomic, assign) float scaleY;
 @end
 
-@implementation BarcodeDetectorManagerMlkit
+@implementation DepthBarcodeDetectorManagerMlkit
 
 - (instancetype)init 
 {
@@ -387,10 +387,10 @@
 @end
 #else
 
-@interface BarcodeDetectorManagerMlkit ()
+@interface DepthBarcodeDetectorManagerMlkit ()
 @end
 
-@implementation BarcodeDetectorManagerMlkit
+@implementation DepthBarcodeDetectorManagerMlkit
 
 - (instancetype)init {
     self = [super init];

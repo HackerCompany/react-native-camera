@@ -1,5 +1,5 @@
 #import <React/RCTBridgeModule.h>
-#import "FaceDetectorManagerMlkit.h"
+#import "DepthFaceDetectorManagerMlkit.h"
 
 @interface RNDepthFaceDetectorModuleMLKit : NSObject <RCTBridgeModule>
 @end

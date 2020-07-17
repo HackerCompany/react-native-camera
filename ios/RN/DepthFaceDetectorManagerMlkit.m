@@ -1,8 +1,8 @@
-#import "FaceDetectorManagerMlkit.h"
+#import "DepthFaceDetectorManagerMlkit.h"
 #import <React/RCTConvert.h>
 #if __has_include(<FirebaseMLVision/FirebaseMLVision.h>)
 
-@interface FaceDetectorManagerMlkit ()
+@interface DepthFaceDetectorManagerMlkit ()
 @property(nonatomic, strong) FIRVisionFaceDetector *faceRecognizer;
 @property(nonatomic, strong) FIRVision *vision;
 @property(nonatomic, strong) FIRVisionFaceDetectorOptions *options;
@@ -10,7 +10,7 @@
 @property(nonatomic, assign) float scaleY;
 @end
 
-@implementation FaceDetectorManagerMlkit
+@implementation DepthFaceDetectorManagerMlkit
 
 - (instancetype)init 
 {
@@ -271,10 +271,10 @@
 @end
 #else
 
-@interface FaceDetectorManagerMlkit ()
+@interface DepthFaceDetectorManagerMlkit ()
 @end
 
-@implementation FaceDetectorManagerMlkit
+@implementation DepthFaceDetectorManagerMlkit
 
 - (instancetype)init {
     self = [super init];

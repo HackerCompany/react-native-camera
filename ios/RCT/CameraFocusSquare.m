@@ -1,8 +1,8 @@
 #import "CameraFocusSquare.h"
 #import <QuartzCore/QuartzCore.h>
 
-const float squareLength = 80.0f;
-@implementation RCTCameraFocusSquare
+const float squareLengthX = 80.0f;
+@implementation RCTDepthCameraFocusSquare
 
 - (id)initWithFrame:(CGRect)frame 
 {

@@ -3,8 +3,8 @@
 #import <React/RCTBridgeModule.h>
 #import <UIKit/UIKit.h>
 
-#import "FaceDetectorManagerMlkit.h"
-#import "BarcodeDetectorManagerMlkit.h"
+#import "DepthFaceDetectorManagerMlkit.h"
+#import "DepthBarcodeDetectorManagerMlkit.h"
 
 @class RNDepthCamera;
 

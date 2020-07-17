@@ -158,7 +158,7 @@ RCT_EXPORT_VIEW_PROPERTY(videoStabilizationMode, NSInteger);
 + (NSDictionary *)faceDetectorConstants
 {
 #if __has_include(<FirebaseMLVision/FirebaseMLVision.h>)
-    return [FaceDetectorManagerMlkit constants];
+    return [DepthFaceDetectorManagerMlkit constants];
 #else
     return [NSDictionary new];
 #endif
@@ -167,13 +167,13 @@ RCT_EXPORT_VIEW_PROPERTY(videoStabilizationMode, NSInteger);
 + (NSDictionary *)barcodeDetectorConstants
 {
 #if __has_include(<FirebaseMLVision/FirebaseMLVision.h>)
-    return [BarcodeDetectorManagerMlkit constants];
+    return [DepthBarcodeDetectorManagerMlkit constants];
 #else
     return [NSDictionary new];
 #endif
 }
 
-RCT_CUSTOM_VIEW_PROPERTY(type, NSInteger, RNCamera)
+RCT_CUSTOM_VIEW_PROPERTY(type, NSInteger, RNDepthCamera)
 {
     NSInteger newType = [RCTConvert NSInteger:json];
     if (view.presetCamera != newType) {
@@ -182,7 +182,7 @@ RCT_CUSTOM_VIEW_PROPERTY(type, NSInteger, RNCamera)
     }
 }
 
-RCT_CUSTOM_VIEW_PROPERTY(cameraId, NSString, RNCamera)
+RCT_CUSTOM_VIEW_PROPERTY(cameraId, NSString, RNDepthCamera)
 {
     NSString *newId = [RCTConvert NSString:json];
 
@@ -195,87 +195,87 @@ RCT_CUSTOM_VIEW_PROPERTY(cameraId, NSString, RNCamera)
     }
 }
 
-RCT_CUSTOM_VIEW_PROPERTY(flashMode, NSInteger, RNCamera)
+RCT_CUSTOM_VIEW_PROPERTY(flashMode, NSInteger, RNDepthCamera)
 {
     [view setFlashMode:[RCTConvert NSInteger:json]];
     [view updateFlashMode];
 }
 
-RCT_CUSTOM_VIEW_PROPERTY(autoFocus, NSInteger, RNCamera)
+RCT_CUSTOM_VIEW_PROPERTY(autoFocus, NSInteger, RNDepthCamera)
 {
     [view setAutoFocus:[RCTConvert NSInteger:json]];
     [view updateFocusMode];
 }
 
-RCT_CUSTOM_VIEW_PROPERTY(autoFocusPointOfInterest, NSDictionary, RNCamera)
+RCT_CUSTOM_VIEW_PROPERTY(autoFocusPointOfInterest, NSDictionary, RNDepthCamera)
 {
     [view setAutoFocusPointOfInterest:[RCTConvert NSDictionary:json]];
     [view updateAutoFocusPointOfInterest];
 }
 
-RCT_CUSTOM_VIEW_PROPERTY(focusDepth, NSNumber, RNCamera)
+RCT_CUSTOM_VIEW_PROPERTY(focusDepth, NSNumber, RNDepthCamera)
 {
     [view setFocusDepth:[RCTConvert float:json]];
     [view updateFocusDepth];
 }
 
-RCT_CUSTOM_VIEW_PROPERTY(useNativeZoom, BOOL, RNCamera)
+RCT_CUSTOM_VIEW_PROPERTY(useNativeZoom, BOOL, RNDepthCamera)
 {
     view.useNativeZoom=[RCTConvert BOOL:json];
     [view setupOrDisablePinchZoom];
 }
 
-RCT_CUSTOM_VIEW_PROPERTY(zoom, NSNumber, RNCamera)
+RCT_CUSTOM_VIEW_PROPERTY(zoom, NSNumber, RNDepthCamera)
 {
     [view setZoom:[RCTConvert CGFloat:json]];
     [view updateZoom];
 }
 
-RCT_CUSTOM_VIEW_PROPERTY(maxZoom, NSNumber, RNCamera)
+RCT_CUSTOM_VIEW_PROPERTY(maxZoom, NSNumber, RNDepthCamera)
 {
     [view setMaxZoom:[RCTConvert CGFloat:json]];
     [view updateZoom];
 }
 
-RCT_CUSTOM_VIEW_PROPERTY(whiteBalance, NSInteger, RNCamera)
+RCT_CUSTOM_VIEW_PROPERTY(whiteBalance, NSInteger, RNDepthCamera)
 {
     [view setWhiteBalance:[RCTConvert NSInteger:json]];
     [view updateWhiteBalance];
 }
 
-RCT_CUSTOM_VIEW_PROPERTY(exposure, NSNumber, RNCamera)
+RCT_CUSTOM_VIEW_PROPERTY(exposure, NSNumber, RNDepthCamera)
 {
     [view setExposure:[RCTConvert float:json]];
     [view updateExposure];
 }
 
-RCT_CUSTOM_VIEW_PROPERTY(pictureSize, NSString *, RNCamera)
+RCT_CUSTOM_VIEW_PROPERTY(pictureSize, NSString *, RNDepthCamera)
 {
     [view setPictureSize:[[self class] pictureSizes][[RCTConvert NSString:json]]];
     [view updatePictureSize];
 }
 
 
-RCT_CUSTOM_VIEW_PROPERTY(barCodeScannerEnabled, BOOL, RNCamera)
+RCT_CUSTOM_VIEW_PROPERTY(barCodeScannerEnabled, BOOL, RNDepthCamera)
 {
 
     view.isReadingBarCodes = [RCTConvert BOOL:json];
     [view setupOrDisableBarcodeScanner];
 }
 
-RCT_CUSTOM_VIEW_PROPERTY(barCodeTypes, NSArray, RNCamera)
+RCT_CUSTOM_VIEW_PROPERTY(barCodeTypes, NSArray, RNDepthCamera)
 {
     [view setBarCodeTypes:[RCTConvert NSArray:json]];
 }
 
 
-RCT_CUSTOM_VIEW_PROPERTY(rectOfInterest, CGRect, RNCamera)
+RCT_CUSTOM_VIEW_PROPERTY(rectOfInterest, CGRect, RNDepthCamera)
 {
     [view setRectOfInterest: [RCTConvert CGRect:json]];
     [view updateRectOfInterest];
 }
 
-RCT_CUSTOM_VIEW_PROPERTY(defaultVideoQuality, NSInteger, RNCamera)
+RCT_CUSTOM_VIEW_PROPERTY(defaultVideoQuality, NSInteger, RNDepthCamera)
 {
     [view setDefaultVideoQuality: [NSNumber numberWithInteger:[RCTConvert NSInteger:json]]];
 }
@@ -286,10 +286,10 @@ RCT_REMAP_METHOD(takePicture,
                  resolver:(RCTPromiseResolveBlock)resolve
                  rejecter:(RCTPromiseRejectBlock)reject)
 {
-    [self.bridge.uiManager addUIBlock:^(__unused RCTUIManager *uiManager, NSDictionary<NSNumber *, RNCamera *> *viewRegistry) {
-        RNCamera *view = viewRegistry[reactTag];
-        if (![view isKindOfClass:[RNCamera class]]) {
-            RCTLogError(@"Invalid view returned from registry, expecting RNCamera, got: %@", view);
+    [self.bridge.uiManager addUIBlock:^(__unused RCTUIManager *uiManager, NSDictionary<NSNumber *, RNDepthCamera *> *viewRegistry) {
+        RNDepthCamera *view = viewRegistry[reactTag];
+        if (![view isKindOfClass:[RNDepthCamera class]]) {
+            RCTLogError(@"Invalid view returned from registry, expecting RNDepthCamera, got: %@", view);
         } else {
 #if TARGET_IPHONE_SIMULATOR
 
@@ -339,10 +339,10 @@ RCT_EXPORT_METHOD(resumePreview:(nonnull NSNumber *)reactTag)
 #if TARGET_IPHONE_SIMULATOR
     return;
 #endif
-    [self.bridge.uiManager addUIBlock:^(__unused RCTUIManager *uiManager, NSDictionary<NSNumber *, RNCamera *> *viewRegistry) {
-        RNCamera *view = viewRegistry[reactTag];
-        if (![view isKindOfClass:[RNCamera class]]) {
-            RCTLogError(@"Invalid view returned from registry, expecting RNCamera, got: %@", view);
+    [self.bridge.uiManager addUIBlock:^(__unused RCTUIManager *uiManager, NSDictionary<NSNumber *, RNDepthCamera *> *viewRegistry) {
+        RNDepthCamera *view = viewRegistry[reactTag];
+        if (![view isKindOfClass:[RNDepthCamera class]]) {
+            RCTLogError(@"Invalid view returned from registry, expecting RNDepthCamera, got: %@", view);
         } else {
             [view resumePreview];
         }
@@ -354,10 +354,10 @@ RCT_EXPORT_METHOD(pausePreview:(nonnull NSNumber *)reactTag)
 #if TARGET_IPHONE_SIMULATOR
     return;
 #endif
-    [self.bridge.uiManager addUIBlock:^(__unused RCTUIManager *uiManager, NSDictionary<NSNumber *, RNCamera *> *viewRegistry) {
-        RNCamera *view = viewRegistry[reactTag];
-        if (![view isKindOfClass:[RNCamera class]]) {
-            RCTLogError(@"Invalid view returned from registry, expecting RNCamera, got: %@", view);
+    [self.bridge.uiManager addUIBlock:^(__unused RCTUIManager *uiManager, NSDictionary<NSNumber *, RNDepthCamera *> *viewRegistry) {
+        RNDepthCamera *view = viewRegistry[reactTag];
+        if (![view isKindOfClass:[RNDepthCamera class]]) {
+            RCTLogError(@"Invalid view returned from registry, expecting RNDepthCamera, got: %@", view);
         } else {
             [view pausePreview];
         }
@@ -386,7 +386,7 @@ RCT_EXPORT_METHOD(checkVideoAuthorizationStatus:(RCTPromiseResolveBlock)resolve
                   reject:(__unused RCTPromiseRejectBlock)reject) {
 #ifdef DEBUG
     if ([[NSBundle mainBundle].infoDictionary objectForKey:@"NSCameraUsageDescription"] == nil) {
-        RCTLogWarn(@"Checking video permissions without having key 'NSCameraUsageDescription' defined in your Info.plist. If you do not add it your app will crash when being built in release mode. You will have to add it to your Info.plist file, otherwise RNCamera is not allowed to use the camera.  You can learn more about adding permissions here: https://stackoverflow.com/a/38498347/4202031");
+        RCTLogWarn(@"Checking video permissions without having key 'NSCameraUsageDescription' defined in your Info.plist. If you do not add it your app will crash when being built in release mode. You will have to add it to your Info.plist file, otherwise RNDepthCamera is not allowed to use the camera.  You can learn more about adding permissions here: https://stackoverflow.com/a/38498347/4202031");
         resolve(@(NO));
         return;
     }
@@ -430,10 +430,10 @@ RCT_EXPORT_METHOD(isRecording:(nonnull NSNumber *)reactTag
         reject(@"E_IS_RECORDING_FAILED", @"Video recording is not supported on a simulator.", nil);
         return;
     #endif
-        [self.bridge.uiManager addUIBlock:^(__unused RCTUIManager *uiManager, NSDictionary<NSNumber *, RNCamera *> *viewRegistry) {
-            RNCamera *view = viewRegistry[reactTag];
-            if (![view isKindOfClass:[RNCamera class]]) {
-                RCTLogError(@"Invalid view returned from registry, expecting RNCamera, got: %@", view);
+        [self.bridge.uiManager addUIBlock:^(__unused RCTUIManager *uiManager, NSDictionary<NSNumber *, RNDepthCamera *> *viewRegistry) {
+            RNDepthCamera *view = viewRegistry[reactTag];
+            if (![view isKindOfClass:[RNDepthCamera class]]) {
+                RCTLogError(@"Invalid view returned from registry, expecting RNDepthCamera, got: %@", view);
             } else {
                 resolve(@([view isRecording]));
             }

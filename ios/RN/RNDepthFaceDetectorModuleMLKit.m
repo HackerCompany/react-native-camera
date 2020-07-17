@@ -37,7 +37,7 @@ RCT_EXPORT_MODULE(RNFaceDetector);
 
 - (NSDictionary *)constantsToExport
 {
-    return [FaceDetectorManagerMlkit constants];
+    return [DepthFaceDetectorManagerMlkit constants];
 }
 
 RCT_EXPORT_METHOD(detectFaces:(nonnull NSDictionary *)options

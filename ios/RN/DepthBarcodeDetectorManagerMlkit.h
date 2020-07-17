@@ -4,7 +4,7 @@
   #import <FirebaseMLVision/FirebaseMLVision.h>
 #endif
 
-@interface BarcodeDetectorManagerMlkit : NSObject
+@interface DepthBarcodeDetectorManagerMlkit : NSObject
 typedef void(^postRecognitionBlock)(NSArray *barcodes);
 
 - (instancetype)init;

@@ -2,7 +2,7 @@
 #import <React/RCTBridgeModule.h>
 #import <AVFoundation/AVFoundation.h>
 
-@class RNCameraManager;
+@class RNDepthCameraManager;
 
 static const int RNFlashModeTorch = 3;
 

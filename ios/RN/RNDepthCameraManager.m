@@ -11,7 +11,7 @@
 #import <CoreServices/CoreServices.h>
 
 
-@implementation RNCameraManager
+@implementation RNDepthCameraManager
 
 RCT_EXPORT_MODULE(RNCameraManager);
 RCT_EXPORT_VIEW_PROPERTY(onCameraReady, RCTDirectEventBlock);

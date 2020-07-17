@@ -310,7 +310,7 @@ const RecordAudioPermissionStatusEnum: {
   NOT_AUTHORIZED: 'NOT_AUTHORIZED',
 };
 
-const CameraManager: Object = NativeModules.RNCameraManager ||
+const CameraManager: Object = NativeModules.RNDepthCameraManager ||
   NativeModules.RNCameraModule || {
     stubbed: true,
     Type: {

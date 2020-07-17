@@ -1,4 +1,4 @@
-#import "RNCamera.h"
+#import "RNDepthCamera.h"
 #import "RNDepthCameraManager.h"
 #import "RNDepthFileSystem.h"
 #import "RNDepthImageUtils.h"

@@ -763,14 +763,11 @@ BOOL _sessionInterruptedX = NO;
         if ([self.session canAddOutput:stillImageOutput]) {
             [self.session addOutput:stillImageOutput];
             self.stillImageOutput = stillImageOutput;
-            [stillImageOutput setDepthDataDeliveryEnabled:YES];
-            [stillImageOutput setEnabledSemanticSegmentationMatteTypes:@[AVSemanticSegmentationMatteTypeSkin, AVSemanticSegmentationMatteTypeHair]];
         }
         
         AVCaptureVideoDataOutput *videoOutput = [[AVCaptureVideoDataOutput alloc] init];
         [[videoOutput connectionWithMediaType:AVMediaTypeVideo] setVideoOrientation:AVCaptureVideoOrientationPortrait];
 
-        NSMutableDictionary *options = [[NSMutableDictionary alloc] init];
         [videoOutput setAlwaysDiscardsLateVideoFrames:YES];
         //[videoOutput setVideoSettings:@{ (id)kCVPixelBufferPixelFormatTypeKey : @(kCVPixelFormatType_32BGRA) }];
         [videoOutput setSampleBufferDelegate:self queue:dispatch_get_main_queue()];
@@ -970,13 +967,6 @@ BOOL _sessionInterruptedX = NO;
 
     // prevent any video recording start that we might have on the way
     _recordRequestedX = NO;
-
-    // get event info and fire RN event if our session was interrupted
-    // due to audio being taken away.
-    NSDictionary *userInfo = notification.userInfo;
-    NSInteger type = [[userInfo valueForKey:AVCaptureSessionInterruptionReasonKey] integerValue];
-
-
 }
 
 
@@ -1312,8 +1302,6 @@ BOOL _sessionInterruptedX = NO;
 }
 
 - (void)recognizeFacialLandmarks:(AVCapturePhoto *)photo {
-    RNDepthCamera *_self = self;
-
         VNDetectFaceLandmarksRequest *request = [[VNDetectFaceLandmarksRequest alloc] initWithCompletionHandler:^(VNRequest * _Nonnull request, NSError * _Nullable error) {
         if (error != nil) {
             return;
@@ -1394,9 +1382,7 @@ BOOL _sessionInterruptedX = NO;
     
     double width = 720;
     double height = 1280;
-    
-    float scaleFactor = width / originalWidth;
-    
+        
     CGContextRef contextRef = CGBitmapContextCreate(nil, width, height, bitsPerComponent, bytesPerRow, colorSpace, bitmapInfo);
     
     // CGContextScaleCTM(contextRef, scaleFactor, scaleFactor);

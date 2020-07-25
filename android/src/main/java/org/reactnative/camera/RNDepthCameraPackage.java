@@ -5,7 +5,7 @@ import com.facebook.react.bridge.JavaScriptModule;
 import com.facebook.react.bridge.NativeModule;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.uimanager.ViewManager;
-import com.lwansbrough.RCTCamera.RCTCameraModule;
+import com.lwansbrough.RCTCamera.RCTDepthCameraModule;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -19,7 +19,7 @@ public class RNDepthCameraPackage implements ReactPackage {
     @Override
     public List<NativeModule> createNativeModules(ReactApplicationContext reactApplicationContext) {
         return Arrays.<NativeModule>asList(
-                new RCTCameraModule(reactApplicationContext),
+                new RCTDepthCameraModule(reactApplicationContext),
                 new CameraModule(reactApplicationContext)
         );
     }

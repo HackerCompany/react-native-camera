@@ -17,9 +17,9 @@ import com.facebook.react.bridge.ReadableMap;
 import java.io.*;
 
 
-public class RCTCameraModule extends ReactContextBaseJavaModule
+public class RCTDepthCameraModule extends ReactContextBaseJavaModule
     implements  LifecycleEventListener {
-    private static final String TAG = "RCTCameraModule";
+    private static final String TAG = "RCTDepthCameraModule";
 
     private static ReactApplicationContext _reactContext;
 
@@ -31,7 +31,7 @@ public class RCTCameraModule extends ReactContextBaseJavaModule
     private ReadableMap mRecordingOptions;
     private Boolean mSafeToCapture = true;
 
-    public RCTCameraModule(ReactApplicationContext reactContext) {
+    public RCTDepthCameraModule(ReactApplicationContext reactContext) {
         super(reactContext);
     }
 
@@ -42,7 +42,7 @@ public class RCTCameraModule extends ReactContextBaseJavaModule
 
     @Override
     public String getName() {
-        return "RCTCameraModule";
+        return "RCTDepthCameraModule";
     }
 
     /**

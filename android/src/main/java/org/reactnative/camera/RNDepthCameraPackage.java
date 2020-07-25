@@ -15,7 +15,7 @@ import java.util.List;
  * Created by jgfidelis on 02/02/18.
  */
 
-public class RNCameraPackage implements ReactPackage {
+public class RNDepthCameraPackage implements ReactPackage {
     @Override
     public List<NativeModule> createNativeModules(ReactApplicationContext reactApplicationContext) {
         return Arrays.<NativeModule>asList(

@@ -1,4 +1,4 @@
-package org.reactnative.camera.tasks;
+package com.hacker.depthcamera.tasks;
 
 import android.util.Log;
 
@@ -13,7 +13,7 @@ import com.google.firebase.ml.vision.common.FirebaseVisionImageMetadata;
 import com.google.firebase.ml.vision.face.FirebaseVisionFace;
 import com.google.firebase.ml.vision.face.FirebaseVisionFaceDetector;
 
-import org.reactnative.camera.utils.ImageDimensions;
+import com.hacker.depthcamera.utils.ImageDimensions;
 import org.reactnative.facedetector.FaceDetectorUtils;
 import org.reactnative.facedetector.RNFaceDetector;
 

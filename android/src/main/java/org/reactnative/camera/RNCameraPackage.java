@@ -1,4 +1,4 @@
-package org.reactnative.camera;
+package com.hacker.depthcamera;
 
 import com.facebook.react.ReactPackage;
 import com.facebook.react.bridge.JavaScriptModule;

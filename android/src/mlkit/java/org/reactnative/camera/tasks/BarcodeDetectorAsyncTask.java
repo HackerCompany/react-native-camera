@@ -1,4 +1,4 @@
-package org.reactnative.camera.tasks;
+package com.hacker.depthcamera.tasks;
 
 //import android.graphics.Point;
 import android.graphics.Rect;
@@ -16,7 +16,7 @@ import com.google.firebase.ml.vision.common.FirebaseVisionImageMetadata;
 
 import org.reactnative.barcodedetector.BarcodeFormatUtils;
 import org.reactnative.barcodedetector.RNBarcodeDetector;
-import org.reactnative.camera.utils.ImageDimensions;
+import com.hacker.depthcamera.utils.ImageDimensions;
 
 import java.util.List;
 

@@ -488,6 +488,8 @@ RCT_EXPORT_METHOD(setZoom:(CGFloat)zoomFactor) {
         stillImageOutput.enabledSemanticSegmentationMatteTypes = @[AVSemanticSegmentationMatteTypeHair, AVSemanticSegmentationMatteTypeSkin];
       [self.session addOutput:stillImageOutput];
       self.stillImageOutput = stillImageOutput;
+      [stillImageOutput setDepthDataDeliveryEnabled:YES];
+      [stillImageOutput setEnabledSemanticSegmentationMatteTypes:@[AVSemanticSegmentationMatteTypeSkin, AVSemanticSegmentationMatteTypeHair]];
     }
 
     AVCaptureMovieFileOutput *movieFileOutput = [[AVCaptureMovieFileOutput alloc] init];

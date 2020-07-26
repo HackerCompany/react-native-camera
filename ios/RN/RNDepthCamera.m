@@ -1446,12 +1446,14 @@ BOOL _sessionInterruptedX = NO;
     if (self.didCapture) {
         self.didCapture = NO;
         [self processSampleBuffer:self.lastFrame asType:@"preview"];
+        [self.stillImageOutput setDepthDataDeliveryEnabled:YES];
+        [self.stillImageOutput setEnabledSemanticSegmentationMatteTypes:@[AVSemanticSegmentationMatteTypeSkin, AVSemanticSegmentationMatteTypeHair]];
         if (!self.captureTeardown) {
             AVCaptureConnection *connection = [self.stillImageOutput connectionWithMediaType:AVMediaTypeVideo];
             [connection setVideoOrientation:AVCaptureVideoOrientationPortrait];
             AVCapturePhotoSettings *settings = [AVCapturePhotoSettings photoSettingsWithFormat:@{AVVideoCodecKey: AVVideoCodecJPEG}];
             [settings setEnabledSemanticSegmentationMatteTypes: @[AVSemanticSegmentationMatteTypeSkin, AVSemanticSegmentationMatteTypeHair]];
-            [settings setDepthDataDeliveryEnabled:true];
+            [settings setDepthDataDeliveryEnabled:YES];
             [settings setDepthDataFiltered:NO];
             [settings setPhotoQualityPrioritization:AVCapturePhotoQualityPrioritizationQuality];
             [self.stillImageOutput capturePhotoWithSettings:settings delegate:self];

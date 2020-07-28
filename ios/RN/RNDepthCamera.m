@@ -790,31 +790,28 @@ BOOL _sessionInterruptedX = NO;
 #if TARGET_IPHONE_SIMULATOR
     return;
 #endif
+    self.captureTeardown = YES;
     dispatch_async(dispatch_get_main_queue(), ^{
         if (self.lastFrame != nil) {
             [self processSampleBuffer:self.lastFrame asType:@"teardown"];
         }
     });
-       dispatch_async(self.sessionQueue, ^{
-    
-           [self.previewLayer removeFromSuperlayer];
-           [self.session commitConfiguration];
-           [self.session stopRunning];
+    dispatch_async(self.sessionQueue, ^{
+        [self.previewLayer removeFromSuperlayer];
+        [self.session commitConfiguration];
+        [self.session stopRunning];
 
-           for (AVCaptureInput *input in self.session.inputs) {
-               [self.session removeInput:input];
-           }
-
-           for (AVCaptureOutput *output in self.session.outputs) {
-               [self.session removeOutput:output];
-           }
-
-
-           // clean these up as well since we've removed
-           // all inputs and outputs from session
-           self.videoCaptureDeviceInput = nil;
-           self.movieFileOutput = nil;
-       });
+        for (AVCaptureInput *input in self.session.inputs) {
+            [self.session removeInput:input];
+        }
+        for (AVCaptureOutput *output in self.session.outputs) {
+            [self.session removeOutput:output];
+        }
+        // clean these up as well since we've removed
+        // all inputs and outputs from session
+        self.videoCaptureDeviceInput = nil;
+        self.movieFileOutput = nil;
+    });
 }
 
 - (void)initializeCaptureSessionInput
@@ -1443,23 +1440,24 @@ BOOL _sessionInterruptedX = NO;
     }
     CFRetain(sampleBuffer);
     self.lastFrame = sampleBuffer;
-    if (self.didCapture) {
-        self.didCapture = NO;
-        [self processSampleBuffer:self.lastFrame asType:@"preview"];
-        [self.stillImageOutput setDepthDataDeliveryEnabled:YES];
-        [self.stillImageOutput setEnabledSemanticSegmentationMatteTypes:@[AVSemanticSegmentationMatteTypeSkin, AVSemanticSegmentationMatteTypeHair]];
-        if (!self.captureTeardown) {
-            AVCaptureConnection *connection = [self.stillImageOutput connectionWithMediaType:AVMediaTypeVideo];
-            [connection setVideoOrientation:AVCaptureVideoOrientationPortrait];
-            AVCapturePhotoSettings *settings = [AVCapturePhotoSettings photoSettingsWithFormat:@{AVVideoCodecKey: AVVideoCodecJPEG}];
-            [settings setEnabledSemanticSegmentationMatteTypes: @[AVSemanticSegmentationMatteTypeSkin, AVSemanticSegmentationMatteTypeHair]];
-            [settings setDepthDataDeliveryEnabled:YES];
-            [settings setDepthDataFiltered:NO];
-            [settings setPhotoQualityPrioritization:AVCapturePhotoQualityPrioritizationQuality];
-            [self.stillImageOutput capturePhotoWithSettings:settings delegate:self];
-        }
-        self.captureTeardown = NO;
+    if (!self.didCapture) {
+        return;
     }
+    [self pausePreview];
+    self.didCapture = NO;
+    dispatch_async(dispatch_get_main_queue(), ^{
+        if (self.lastFrame != nil) {
+            [self processSampleBuffer:self.lastFrame asType:@"preview"];
+        }
+    });
+    [self.stillImageOutput setDepthDataDeliveryEnabled:YES];
+    [self.stillImageOutput setEnabledSemanticSegmentationMatteTypes:@[AVSemanticSegmentationMatteTypeSkin, AVSemanticSegmentationMatteTypeHair]];
+    AVCapturePhotoSettings *settings = [AVCapturePhotoSettings photoSettingsWithFormat:@{AVVideoCodecKey: AVVideoCodecJPEG}];
+    [settings setEnabledSemanticSegmentationMatteTypes: @[AVSemanticSegmentationMatteTypeSkin, AVSemanticSegmentationMatteTypeHair]];
+    [settings setDepthDataDeliveryEnabled:YES];
+    [settings setDepthDataFiltered:NO];
+    [settings setPhotoQualityPrioritization:AVCapturePhotoQualityPrioritizationQuality];
+    [self.stillImageOutput capturePhotoWithSettings:settings delegate:self];
 }
 
 - (void)captureOutput:(AVCaptureOutput *)output didDropSampleBuffer:(CMSampleBufferRef)sampleBuffer fromConnection:(AVCaptureConnection *)connection {

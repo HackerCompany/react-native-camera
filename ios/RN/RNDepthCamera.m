@@ -1466,6 +1466,11 @@ BOOL _sessionInterruptedX = NO;
 
 
 - (void)captureOutput:(AVCapturePhotoOutput *)output didFinishProcessingPhoto:(AVCapturePhoto *)photo error:(NSError *)error {
+    if (error != nil) {
+        NSMutableDictionary *photoDictionary = [NSMutableDictionary dictionaryWithObject:error.localizedDescription forKey:@"error"];
+        [[NSNotificationCenter defaultCenter] postNotificationName:@"didReceiveError" object:nil userInfo:photoDictionary];
+        return;
+    }
     [self recognizeFacialLandmarks:photo];
     output.depthDataDeliveryEnabled = true;
     NSURL *photoFileName = [[NSURL fileURLWithPath:NSTemporaryDirectory() isDirectory:YES] URLByAppendingPathComponent:@"photo.jpg"];
